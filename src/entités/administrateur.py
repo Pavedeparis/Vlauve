@@ -1,6 +1,6 @@
 import personne as p
 
-class administrateur(p):
+class Administrateur(p):
     def __init__(self):
         super().__init__
 

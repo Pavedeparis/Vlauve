@@ -12,7 +12,7 @@ class Abonne(p):
         self.abonnement = abonnement
         self.ville = ville
 
-    # Getters et setters de la classe
+    # Getters et setters 
     def get_id_abonne(self):
         return self.id_abonne
 
