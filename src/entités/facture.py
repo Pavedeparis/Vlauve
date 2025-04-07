@@ -8,36 +8,19 @@ class Facture:
         self.montant = montant
         self.duree = duree
 
-    # Getters et setters
-    def get_id_facture(self):
-        return self.id_facture
-
-    def set_id_facture(self, id_facture):
-        self.id_facture = id_facture
-
-    def get_abonne(self):
-        return self.abonne
-
-    def set_abonne(self, abonne):
-        self.abonne = abonne
-
-    def get_date(self):
-        return self.date
-
-    def set_date(self, date):
-        self.date = date
-
-    def get_montant(self):
-        return self.montant
-
-    def set_montant(self, montant):
-        self.montant = montant
-
-    def get_duree(self):
-        return self.duree
-
-    def set_duree(self, duree):
-        self.duree = duree
+    # Getters
+    def get_id_facture(self): return self.id_facture
+    def get_abonne(self): return self.abonne
+    def get_date(self): return self.date
+    def get_montant(self): return self.montant
+    def get_duree(self): return self.duree
+    
+    # Setters 
+    def set_id_facture(self, id_facture) : self.id_facture = id_facture
+    def set_abonne(self, abonne): self.abonne = abonne
+    def set_date(self, date): self.date = date
+    def set_montant(self, montant): self.montant = montant
+    def set_duree(self, duree): self.duree = duree
 
     # Affichage de la facture
     def __str__(self):

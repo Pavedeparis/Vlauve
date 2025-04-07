@@ -40,9 +40,3 @@ class DAOSession:
         DAOSession.get_connexion().close()
         DAOSession.connection = None
         print("Fermeture de la connexion à la base de données")
-
-
-    
-
-
-

@@ -11,54 +11,25 @@ class Station:
         self.velos = velos
         self.reseau = reseau
 
-    # Getters et setters
-    def get_id_station(self):
-        return self.id_station
+    # Getters
+    def get_id_station(self): return self.id_station
+    def get_nom(self): return self.nom
+    def get_nomrue(self): return self.nomrue
+    def get_numrue(self): return self.numrue
+    def get_gps(self): return self.gps
+    def get_capacite(self): return self.capacite
+    def get_velos(self): return self.velos
+    def get_reseau(self): return self.reseau
 
-    def set_id_station(self, id_station):
-        self.id_station = id_station
-
-    def get_nom(self):
-        return self.nom
-
-    def set_nom(self, nom):
-        self.nom = nom
-
-    def get_nomrue(self):
-        return self.nomrue
-
-    def set_nomrue(self, nomrue):
-        self.nomrue = nomrue
-
-    def get_numrue(self):
-        return self.numrue
-    
-    def set_numrue(self, numrue):
-        self.numrue = numrue
-
-    def get_gps(self):
-        return self.gps
-
-    def set_gps(self, gps):
-        self.gps = gps
-
-    def get_capacite(self):
-        return self.capacite
-
-    def set_capacite(self, capacite):
-        self.capacite = capacite
-
-    def get_velos(self):
-        return self.velos
-
-    def set_velos(self, velos):
-        self.velos = velos
-
-    def get_reseau(self):
-        return self.reseau
-
-    def set_reseau(self, reseau):
-        self.reseau = reseau
+    # Setters
+    def set_id_station(self, id_station): self.id_station = id_station
+    def set_nom(self, nom): self.nom = nom
+    def set_nomrue(self, nomrue): self.nomrue = nomrue    
+    def set_numrue(self, numrue): self.numrue = numrue
+    def set_gps(self, gps): self.gps = gps
+    def set_capacite(self, capacite): self.capacite = capacite
+    def set_velos(self, velos): self.velos = velos
+    def set_reseau(self, reseau): self.reseau = reseau
 
     # Affichage de la ville
     def __str__(self):

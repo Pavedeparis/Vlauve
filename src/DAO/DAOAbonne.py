@@ -1,6 +1,6 @@
 from mysql.connector import Error
 from DAO.DAOSession import DAOSession
-import entités.abonne as a 
+from entités.abonne import Abonne 
 
 class DAOAbonne:
     unique_instance = None
