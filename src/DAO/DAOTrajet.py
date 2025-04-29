@@ -18,13 +18,13 @@ class DAOTrajet:
     def insert_trajet(self, trajet):
         sql = "INSERT INTO trajet (station_depart, station_arrivee, nbr_km, dateheure_debut, dateheure_fin, carteAbo, refVelo) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         valeurs = (
-            trajet.get_station_depart().get_id_station(),
-            trajet.get_station_arrivee().get_id_station(),
+            trajet.get_station_depart().get_numStation(),  # ou get_nom() si tu veux le nom
+            trajet.get_station_arrivee().get_numStation(),  # ou get_nom() si tu veux le nom
             trajet.get_nbr_km(),
             trajet.get_dateheure_debut(),
             trajet.get_dateheure_fin(),
-            trajet.get_abonne().get_carteAbo(),
-            trajet.get_velo().get_refVelo()
+            trajet.get_carteAbo(),
+            trajet.get_refVelo()
         )
         try:
             connection = DAOSession.get_connexion()
@@ -64,7 +64,7 @@ class DAOTrajet:
             if cursor:
                 cursor.close()
 
-    # Recherche d'un trajet en particulier avec son ID
+    # Recherche d'un trajet en particulier avec son refTrajet
     def find_trajet(self, refTrajet):
         sql = "SELECT * FROM trajet WHERE refTrajet = %s"
         valeurs = (refTrajet,)
@@ -91,13 +91,13 @@ class DAOTrajet:
     def update_trajet(self, un_trajet):
         sql = "UPDATE trajet SET station_depart = %s, station_arrivee = %s, nbr_km = %s, dateheure_debut = %s, dateheure_fin = %s, carteAbo = %s, refVelo = %s WHERE refTrajet = %s"
         valeurs = (
-            un_trajet.get_station_depart().get_id_station(),
-            un_trajet.get_station_arrivee().get_id_station(),
+            un_trajet.get_station_depart().get_numStation(),  # ou get_nom() si tu veux le nom
+            un_trajet.get_station_arrivee().get_numStation(),  # ou get_nom() si tu veux le nom
             un_trajet.get_nbr_km(),
             un_trajet.get_dateheure_debut(),
             un_trajet.get_dateheure_fin(),
-            un_trajet.get_abonne().get_carteAbo(),
-            un_trajet.get_velo().get_refVelo(),
+            un_trajet.get_carteAbo(),
+            un_trajet.get_refVelo(),
             un_trajet.get_refTrajet()
         )
         try:
@@ -137,6 +137,37 @@ class DAOTrajet:
             if cursor:
                 cursor.close()
         return les_trajets
+
+    from DAO.DAOStation import DAOStation
+
+    def select_trajets_abonne(self, carteAbo):
+        connection = DAOSession.get_connexion()
+        cursor = connection.cursor()
+        sql = "SELECT * FROM trajet WHERE carteAbo = %s"
+        cursor.execute(sql, (carteAbo,))
+        rows = cursor.fetchall()
+
+        daoStation = DAOStation.get_instance()
+        trajets = []
+
+        for row in rows:
+            refTrajet = row[0]
+            id_station_depart = row[1]
+            id_station_arrivee = row[2]
+            nbr_km = row[3]
+            date_debut = row[4]
+            date_fin = row[5]
+            carte_abo = row[6]
+            ref_velo = row[7]
+
+            station_depart = daoStation.find_station(id_station_depart)
+            station_arrivee = daoStation.find_station(id_station_arrivee)
+
+            trajet = Trajet(refTrajet, station_depart, station_arrivee, nbr_km, date_debut, date_fin, carte_abo, ref_velo)
+            trajets.append(trajet)
+
+        return trajets
+
 
     # Méthode pour transformer une ligne en un objet Trajet
     def set_all_values(self, rs):

@@ -30,8 +30,8 @@ class TrajetFrame(ttk.Frame):
         bouton_frame.pack(pady=10)
 
         ttk.Button(bouton_frame, text="Enregistrer un Trajet", command=self.ajouter_trajet).grid(row=0, column=0, padx=5)
-        ttk.Button(bouton_frame, text="Exporter Historique", command=self.exporter_historique).grid(row=0, column=1, padx=5)
-        ttk.Button(bouton_frame, text="Retour", command=self.controller.afficher_accueil).grid(row=0, column=2, padx=5)
+        ttk.Button(bouton_frame, text="Exporter Historique", command=self.exporter_trajets).grid(row=0, column=1, padx=5)
+        ttk.Button(bouton_frame, text="Retour", command=self.retour).grid(row=0, column=2, padx=5)
 
         # Frame : filtrer par date
         filtre_frame = ttk.LabelFrame(self, text="Filtrer par date")
@@ -51,22 +51,25 @@ class TrajetFrame(ttk.Frame):
 
         # Charger trajets
         self.charger_trajets()
+    
+    def retour(self):
+        self.controller.afficher_accueil(self.abonne)
 
     def charger_trajets(self):
         daoTrajet = DAOTrajet.get_instance()
-        trajets = daoTrajet.select_trajet(self.abonne) 
+        trajets = daoTrajet.select_trajets_abonne(self.abonne.get_carteAbo())
 
         # Filtrer par date
         if self.filtre_date.get() == "ancien":
-            trajets.sort(key=lambda t: t.get_date_heure_depart())  
+            trajets.sort(key=lambda t: t.get_dateheure_depart())  
         elif self.filtre_date.get() == "recent":
-            trajets.sort(key=lambda t: t.get_date_heure_depart(), reverse=True)
+            trajets.sort(key=lambda t: t.get_dateheure_depart(), reverse=True)
 
         # Filtrer par distance
         if self.filtre_distance.get() == "petite":
-            trajets.sort(key=lambda t: t.get_km_parcourus())  # petit -> grand
+            trajets.sort(key=lambda t: t.get_nbr_km())  
         elif self.filtre_distance.get() == "grande":
-            trajets.sort(key=lambda t: t.get_km_parcourus(), reverse=True)  # grand -> petit
+            trajets.sort(key=lambda t: t.get_nbr_km(), reverse=True)  
 
         # Vider le tableau pour le réinitialiser
         for row in self.tree.get_children():
@@ -74,12 +77,13 @@ class TrajetFrame(ttk.Frame):
 
         # Remplir tableau avec les données voulues
         for trajet in trajets:
+            velo = DAOVelo.get_instance().find_velo(trajet.get_refVelo())
             self.tree.insert('', 'end', values=(
-                trajet.get_id_trajet(),
-                trajet.get_station_depart().get_nom_station(),
-                trajet.get_station_arrivee().get_nom_station(),
-                trajet.get_km_parcourus(),
-                trajet.get_velo().get_ref_velo()
+                trajet.get_refTrajet(),
+                trajet.get_station_depart().get_nom(),
+                trajet.get_station_arrivee().get_nom(),
+                trajet.get_nbr_km(),
+                velo.get_refVelo() 
             ))
 
     # Méthode pour ajouter un trajet à partir du bouton 
@@ -109,16 +113,16 @@ class TrajetFrame(ttk.Frame):
         )).grid(row=4, column=0, columnspan=2, pady=10)
     
     # Méthode pour enregistrer le trajet avec les informations données
-    def enregistrer_trajet(self, id_station_depart, id_station_arrivee, km_parcourus, ref_velo, form):
+    def enregistrer_trajet(self, station_depart, station_arrivee, nbr_km, refVelo, form):
         try:
             daoStation = DAOStation.get_instance()
             daoVelo = DAOVelo.get_instance()
             daoTrajet = DAOTrajet.get_instance()
 
             # Retrouver les entités à partir des IDs entrés
-            station_depart = daoStation.find_station(int(id_station_depart))
-            station_arrivee = daoStation.find_station(int(id_station_arrivee))
-            velo = daoVelo.find_velo(ref_velo)
+            station_depart = daoStation.find_station(int(station_depart))
+            station_arrivee = daoStation.find_station(int(station_arrivee))
+            velo = daoVelo.find_velo(refVelo)
 
             if not station_depart or not station_arrivee or not velo:
                 print("Erreur : Station ou Vélo introuvable")
@@ -126,29 +130,33 @@ class TrajetFrame(ttk.Frame):
 
             # Reformuler l'ajout du trajet
             trajet = Trajet(
-                id_trajet=None,  # Auto-incrémenté
+                refTrajet=None,  # Auto-incrémenté
                 station_depart=station_depart,
                 station_arrivee=station_arrivee,
-                km_parcourus=float(km_parcourus),
-                date_heure_depart=datetime.now(),
-                date_heure_arrivee=datetime.now(),
-                velo=velo,
-                abonne=self.abonne
+                nbr_km=float(nbr_km),
+                dateheure_debut=datetime.now(),
+                dateheure_fin=datetime.now(),
+                refVelo=velo.get_refVelo(),
+                carteAbo=self.abonne.get_carteAbo()
             )
 
-            id_trajet = daoTrajet.insert_trajet(trajet)
+            refTrajet = daoTrajet.insert_trajet(trajet)
 
-            if id_trajet != -1:
-                print("Trajet ajouté avec succès ! ID:", id_trajet)
-                self.charger_trajets()  # Recharger le tableau
-                form.destroy() # Fermer l'onglet
+            if refTrajet != -1:
+                print("Trajet ajouté avec succès ! ID:", refTrajet)
+                self.charger_trajets()  
+                form.destroy() 
             else:
                 print("Erreur lors de l'insertion du trajet.")
 
         except Exception as e:
             print(f"Erreur : {e}")
 
-    # Méthode  pour exporter l'historique des trajets (en fonction des filtres?)
-    def exporter_historique(self):
-        print("Exporter historique")
-        # Ajouter code Pierre
+    # Méthode  pour exporter l'historique des trajets
+    def exporter_trajets(self):
+        daoTrajet = DAOTrajet.get_instance()
+        trajets = daoTrajet.select_trajets_abonne(self.abonne.get_carteAbo())
+        if trajets:
+            Trajet.exporter_trajets(trajets)
+        else:
+            print("Aucun trajet à exporter")

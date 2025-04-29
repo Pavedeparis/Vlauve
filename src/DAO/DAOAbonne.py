@@ -13,10 +13,8 @@ class DAOAbonne:
 
     # Insertion d'un abonné dans la BDD
     def insert_abonne(self, un_abonne):
-        sql = """INSERT INTO abonne (email, mdp, nom, prenom, num_tel, num_rue, nom_rue, num_cb, ville) 
-                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-        valeurs = (un_abonne.get_email(), un_abonne.get_mdp(), un_abonne.get_nom(), un_abonne.get_prenom(),
-                   un_abonne.get_num_tel(), un_abonne.get_num_rue(), un_abonne.get_nom_rue(), un_abonne.get_num_cb(), un_abonne.get_ville())
+        sql = "INSERT INTO abonne (email, mdp, nom, prenom, num_tel, num_rue, nom_rue, num_cb, ville) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        valeurs = (un_abonne.get_email(), un_abonne.get_mdp(), un_abonne.get_nom(), un_abonne.get_prenom(), un_abonne.get_num_tel(), un_abonne.get_num_rue(), un_abonne.get_nom_rue(), un_abonne.get_num_cb(), un_abonne.get_ville())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -74,8 +72,12 @@ class DAOAbonne:
 
     # Recherche d'abonnés en utilisant des critères
     def select_abonnes(self):
+        sql = "SELECT * FROM abonne"
         try:
-            resultats = self.db.query("SELECT * FROM abonne") 
+            connection = DAOSession.get_connexion()
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(sql)
+            resultats = cursor.fetchall()
             abonnes = []
             for row in resultats:
                 try:
@@ -95,6 +97,9 @@ class DAOAbonne:
                 except KeyError as e:
                     print(f"Erreur lors de la récupération des données : {e}")
             return abonnes
-        except Exception as e:
+        except Error as e:
             print(f"Erreur lors de la récupération des abonnés : {e}")
             return []
+        finally:
+            if cursor:
+                cursor.close()

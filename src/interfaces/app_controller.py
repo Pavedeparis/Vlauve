@@ -42,7 +42,6 @@ class AppController:
         
         return abonnés + administrateurs
 
-
     # Changer de frame
     def changer_frame(self, nouvelle_frame):
         if self.frame_courant:
