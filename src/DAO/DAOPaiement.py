@@ -1,6 +1,6 @@
 from mysql.connector import Error
 from DAO.DAOSession import DAOSession
-from entités.paiement import Paiement
+from entites.paiement import Paiement
 
 class DAOPaiement:
     unique_instance = None
@@ -13,8 +13,8 @@ class DAOPaiement:
 
     # Insertion d'un paiement dans la BDD
     def insert_paiement(self, un_paiement):
-        sql = "INSERT INTO paiement (id_facture, date, montant) VALUES (%s, %s, %s)"
-        valeurs = (un_paiement.get_facture().get_id_facture(), un_paiement.get_date(), un_paiement.get_montant())
+        sql = "INSERT INTO paiement (date, montant, idFact) VALUES (%s, %s, %s)"
+        valeurs = (un_paiement.get_date(), un_paiement.get_montant(), un_paiement.get_idFact())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -35,8 +35,8 @@ class DAOPaiement:
 
     # Suppression d'un paiement dans la BDD
     def delete_paiement(self, un_paiement):
-        sql = "DELETE FROM paiement WHERE id_paiement = %s"
-        valeurs = (un_paiement.get_id_paiement(),)
+        sql = "DELETE FROM paiement WHERE idPaie = %s"
+        valeurs = (un_paiement.get_idPaie(),)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -55,9 +55,9 @@ class DAOPaiement:
                 cursor.close()
 
     # Recherche d'un paiement par son ID
-    def find_paiement(self, id_paiement):
-        sql = "SELECT * FROM paiement WHERE id_paiement = %s"
-        valeurs = (id_paiement,)
+    def find_paiement(self, idPaie):
+        sql = "SELECT * FROM paiement WHERE idPaie = %s"
+        valeurs = (idPaie,)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)
@@ -79,8 +79,8 @@ class DAOPaiement:
 
     # Mise à jour d'un paiement
     def update_paiement(self, un_paiement):
-        sql = "UPDATE paiement SET date = %s, montant = %s WHERE id_paiement = %s"
-        valeurs = (un_paiement.get_date(), un_paiement.get_montant(), un_paiement.get_id_paiement())
+        sql = "UPDATE paiement SET date = %s, montant = %s WHERE idPaie = %s"
+        valeurs = (un_paiement.get_date(), un_paiement.get_montant(), un_paiement.get_idPaie())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -105,8 +105,8 @@ class DAOPaiement:
         valeurs = []
 
         if critere_facture:
-            sql += "id_facture = %s"
-            valeurs.append(critere_facture.get_id_facture())
+            sql += "idFact = %s"
+            valeurs.append(critere_facture.get_idFact())
         if critere_date:
             if len(valeurs) > 0:
                 sql += " AND "
@@ -133,8 +133,27 @@ class DAOPaiement:
                 cursor.close()
         return les_paiements
 
+    def select_paiement(self, critere_facture=None, critere_date=None):
+        les_paiements = []
+        sql = "SELECT * FROM paiement "
+   
+        try:
+            connection = DAOSession.get_connexion()
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(sql)
+            rs = cursor.fetchall()
+            for row in rs:
+                les_paiements.append(self.set_all_values(row))
+        except Error as e:
+            print("\n<--------------------------------------->")
+            print(f"Erreur lors de la recherche des paiements : {e}")
+            print(sql)
+        finally:
+            if cursor:
+                cursor.close()
+        return les_paiements
+    
     # Méthode pour transfromer une ligne en un objet Paiement
     def set_all_values(self, rs):
-        facture = DAOSession.get_instance().find_facture(rs["id_facture"])  # Hypothèse : une méthode dans DAOSession
-        un_paiement = Paiement(rs["id_paiement"], facture, rs["date"], rs["montant"])
+        un_paiement = Paiement(rs["idPaie"], rs["date"], rs["montant"], rs["idFact"])
         return un_paiement

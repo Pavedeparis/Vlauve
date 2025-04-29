@@ -12,8 +12,8 @@ class DAOReseau:
 
     # Insertion d'un réseau dans la BDD
     def insert_reseau(self, un_reseau):
-        sql = "INSERT INTO reseau (id_reseau, nom, annee, id_ville) VALUES (%s, %s, %s, %s)"
-        valeurs = (un_reseau.get_id_reseau(), un_reseau.get_nom(), un_reseau.get_annee(), un_reseau.get_ville().get_id_ville())
+        sql = "INSERT INTO reseau (numRes, nom, annee, idVille) VALUES (%s, %s, %s, %s)"
+        valeurs = (un_reseau.get_numRes(), un_reseau.get_nom(), un_reseau.get_annee(), un_reseau.get_ville().get_idVille())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -34,8 +34,8 @@ class DAOReseau:
 
     # Suppression d'un réseau de la base de données
     def delete_reseau(self, un_reseau):
-        sql = "DELETE FROM reseau WHERE id_reseau = %s"
-        valeurs = (un_reseau.get_id_reseau(),)
+        sql = "DELETE FROM reseau WHERE numRes = %s"
+        valeurs = (un_reseau.get_numRes(),)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -54,9 +54,9 @@ class DAOReseau:
                 cursor.close()
 
     # Recherche d'un réseau par son ID
-    def find_reseau(self, id_reseau):
-        sql = "SELECT * FROM reseau WHERE id_reseau = %s"
-        valeurs = (id_reseau,)
+    def find_reseau(self, numRes):
+        sql = "SELECT * FROM reseau WHERE numRes = %s"
+        valeurs = (numRes,)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)
@@ -78,8 +78,8 @@ class DAOReseau:
 
     # Mise à jour des informations d'un réseau
     def update_reseau(self, un_reseau):
-        sql = "UPDATE reseau SET nom = %s, annee = %s, id_ville = %s WHERE id_reseau = %s"
-        valeurs = (un_reseau.get_nom(), un_reseau.get_annee(), un_reseau.get_ville().get_id_ville(), un_reseau.get_id_reseau())
+        sql = "UPDATE reseau SET nom = %s, annee = %s, idVille = %s WHERE numRes = %s"
+        valeurs = (un_reseau.get_nom(), un_reseau.get_annee(), un_reseau.get_ville().get_idVille(), un_reseau.get_numRes())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -101,14 +101,14 @@ class DAOReseau:
     def select_reseau(self, un_reseau):
         les_reseaux = []
         sql = "SELECT * FROM reseau WHERE "
-        critere_id = un_reseau.get_id_reseau()
+        critere_id = un_reseau.get_numRes()
         critere_nom = un_reseau.get_nom()
         critere_annee = un_reseau.get_annee()
         critere_ville = un_reseau.get_ville()
         valeurs = []
 
         if critere_id is not None:
-            sql += "id_reseau = %s"
+            sql += "numRes = %s"
             valeurs.append(critere_id)
         else:
             sql = "SELECT * FROM reseau"
@@ -121,8 +121,8 @@ class DAOReseau:
             sql += " AND annee = %s"
             valeurs.append(critere_annee)
         if critere_ville is not None:
-            sql += " AND id_ville = %s"
-            valeurs.append(critere_ville.get_id_ville())
+            sql += " AND idVille = %s"
+            valeurs.append(critere_ville.get_idVille())
 
         try:
             connection = DAOSession.get_connexion()
@@ -143,8 +143,8 @@ class DAOReseau:
 
     # Méthode pour transformer une ligne de résultats en un objet Reseau
     def set_all_values(self, rs):
-        from entités.reseau import Reseau
-        from entités.ville import Ville
-        id_ville = Ville(rs["id_ville"], rs["nom_ville"], rs["codepostal"], rs["px_min_gratuites"], rs["px_abo_annuel"], rs["px_abo_occasionnel"])
-        un_reseau = Reseau(rs["id_reseau"], rs["nom"], rs["annee"], id_ville)
+        from entites.reseau import Reseau
+        from entites.ville import Ville
+        idVille = Ville(rs["idVille"], rs["nom_ville"], rs["codepostal"], rs["px_min_gratuites"], rs["px_abo_annuel"], rs["px_abo_occasionnel"])
+        un_reseau = Reseau(rs["numRes"], rs["nom"], rs["annee"], idVille)
         return un_reseau

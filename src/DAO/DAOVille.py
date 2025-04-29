@@ -12,8 +12,8 @@ class DAOVille:
 
     # Insertion d'une ville dans la BDD
     def insert_ville(self, une_ville):
-        sql = "INSERT INTO ville (id_ville, nom, codepostal, px_min_gratuites, px_abo_annuel, px_abo_occasionnel) VALUES (%s, %s, %s, %s, %s, %s)"
-        valeurs = (une_ville.get_id_ville(), une_ville.get_nom(), une_ville.get_codepostal(), une_ville.get_px_min_gratuites(), une_ville.get_px_abo_annuel(), une_ville.get_px_abo_occasionnel())
+        sql = "INSERT INTO ville (idVille, nom, code_postal, tarif_min_gratuite, tarif_demi_occ, tarif_demi_ann) VALUES (%s, %s, %s, %s, %s, %s)"
+        valeurs = (une_ville.get_idVille(), une_ville.get_nom(), une_ville.get_code_postal(), une_ville.get_tarif_min_gratuite(), une_ville.get_tarif_demi_occ(), une_ville.get_tarif_demi_ann())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -34,8 +34,8 @@ class DAOVille:
 
     # Suppression d'une ville de la BDD
     def delete_ville(self, une_ville):
-        sql = "DELETE FROM ville WHERE id_ville = %s"
-        valeurs = (une_ville.get_id_ville(),)
+        sql = "DELETE FROM ville WHERE idVille = %s"
+        valeurs = (une_ville.get_idVille(),)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -54,9 +54,9 @@ class DAOVille:
                 cursor.close()
 
     # Recherche d'une ville par son ID
-    def find_ville(self, id_ville):
-        sql = "SELECT * FROM ville WHERE id_ville = %s"
-        valeurs = (id_ville,)
+    def find_ville(self, idVille):
+        sql = "SELECT * FROM ville WHERE idVille = %s"
+        valeurs = (idVille,)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)
@@ -78,8 +78,8 @@ class DAOVille:
 
     # Mise à jour des informations d'une ville
     def update_ville(self, une_ville):
-        sql = "UPDATE ville SET nom = %s, codepostal = %s, px_min_gratuites = %s, px_abo_annuel = %s, px_abo_occasionnel = %s WHERE id_ville = %s"
-        valeurs = (une_ville.get_nom(), une_ville.get_codepostal(), une_ville.get_px_min_gratuites(), une_ville.get_px_abo_annuel(), une_ville.get_px_abo_occasionnel(), une_ville.get_id_ville())
+        sql = "UPDATE ville SET nom = %s, code_postal = %s, tarif_min_gratuite = %s, tarif_demi_occ = %s, tarif_demi_ann = %s WHERE idVille = %s"
+        valeurs = (une_ville.get_nom(), une_ville.get_code_postal(), une_ville.get_tarif_min_gratuite(), une_ville.get_tarif_demi_occ(), une_ville.get_tarif_demi_ann(), une_ville.get_idVille())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -101,13 +101,13 @@ class DAOVille:
     def select_ville(self, une_ville):
         les_villes = []
         sql = "SELECT * FROM ville WHERE "
-        critere_id = une_ville.get_id_ville()
+        critere_id = une_ville.get_idVille()
         critere_nom = une_ville.get_nom()
-        critere_codepostal = une_ville.get_codepostal()
+        critere_code_postal = une_ville.get_code_postal()
         valeurs = []
 
         if critere_id is not None:
-            sql += "id_ville = %s"
+            sql += "idVille = %s"
             valeurs.append(critere_id)
         else:
             sql = "SELECT * FROM ville"
@@ -116,9 +116,9 @@ class DAOVille:
         if critere_nom is not None:
             sql += " AND nom = %s"
             valeurs.append(critere_nom)
-        if critere_codepostal is not None:
-            sql += " AND codepostal = %s"
-            valeurs.append(critere_codepostal)
+        if critere_code_postal is not None:
+            sql += " AND code_postal = %s"
+            valeurs.append(critere_code_postal)
 
         try:
             connection = DAOSession.get_connexion()
@@ -139,6 +139,6 @@ class DAOVille:
 
     # Méthode pour transformer une ligne de résultats en un objet Ville
     def set_all_values(self, rs):
-        from entités.ville import Ville
-        une_ville = Ville(rs["id_ville"], rs["nom"], rs["codepostal"], rs["px_min_gratuites"], rs["px_abo_annuel"], rs["px_abo_occasionnel"])
+        from entites.ville import Ville
+        une_ville = Ville(rs["idVille"], rs["nom"], rs["code_postal"], rs["tarif_min_gratuite"], rs["tarif_demi_occ"], rs["tarif_demi_ann"])
         return une_ville

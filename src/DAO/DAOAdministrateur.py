@@ -1,7 +1,6 @@
 from mysql.connector import Error
 from DAO.DAOSession import DAOSession
-from DAO.DAOPersonne import DAOPersonne
-from entités.administrateur import Administrateur
+from entites.personne import Administrateur
 
 class DAOAdministrateur:
     unique_instance = None
@@ -14,68 +13,39 @@ class DAOAdministrateur:
 
     # Insertion d'un administrateur dans la BDD
     def insert_administrateur(self, un_admin):
-        # Insérer dans la table personne via DAOPersonne
-        dao_personne = DAOPersonne.get_instance()
-        id_personne = dao_personne.insert_personne(un_admin)
-        if id_personne == -1:
+        sql = "INSERT INTO administrateur (email, mdp, nom, prenom, num_tel) VALUES (%s, %s, %s, %s, %s)"
+        valeurs = (un_admin.get_email(), un_admin.get_mdp(), un_admin.get_nom(), un_admin.get_prenom(), un_admin.get_num_tel())
+        cursor = None
+        try:
+            connection = DAOSession.get_connexion()
+            cursor = connection.cursor()
+            cursor.execute(sql, valeurs)
+            connection.commit()
+            return cursor.lastrowid
+        except Error as e:
+            print("\n<--------------------------------------->")
+            print(f"Erreur lors de l'insertion de l'administrateur : {e}")
+            print(sql)
+            print(valeurs)
+            print("rollback")
+            connection.rollback()
             return -1
+        finally:
+            if cursor:
+                cursor.close()
 
-        # Insérer dans administrateur
-        sql = "INSERT INTO administrateur (id_personne) VALUES (%s)"
-        valeurs = (id_personne,)
-        try:
-            connection = DAOSession.get_connexion()
-            cursor = connection.cursor()
-            cursor.execute(sql, valeurs)
-            return id_personne
-        except Error as e:
-            print("\n<--------------------------------------->")
-            print(f"Erreur lors de la création de l'administrateur : {e}")
-            print(sql)
-            print(valeurs)
-            print("rollback")
-            connection.rollback()
-            return -1
-        finally:
-            if cursor:
-                cursor.close()
-    
-    # Suppression d'un administrateur de la BDD
-    def delete_administrateur(self, un_admin):
-        sql = "DELETE FROM administrateur WHERE id_personne = %s"
-        valeurs = (un_admin.get_id_personne(),)
-        try:
-            connection = DAOSession.get_connexion()
-            cursor = connection.cursor()
-            cursor.execute(sql, valeurs)
-            # Supprimer la personne associée
-            dao_personne = DAOPersonne.get_instance()
-            return dao_personne.delete_personne(un_admin)
-        except Error as e:
-            print("\n<--------------------------------------->")
-            print(f"Erreur lors de la suppression de l'administrateur : {e}")
-            print(sql)
-            print(valeurs)
-            print("rollback")
-            connection.rollback()
-            return False
-        finally:
-            if cursor:
-                cursor.close()
-    
     # Recherche d'un administrateur par son ID
-    def find_administrateur(self, id_personne):
-        sql = "SELECT * FROM administrateur WHERE id_personne = %s"
-        valeurs = (id_personne,)
+    def find_administrateur(self, id_admin):
+        sql = "SELECT * FROM administrateur WHERE id_admin = %s"
+        valeurs = (id_admin,)
+        cursor = None
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)
             cursor.execute(sql, valeurs)
             rs = cursor.fetchone()
             if rs:
-                dao_personne = DAOPersonne.get_instance()
-                personne = dao_personne.find_personne(id_personne)
-                return self.set_all_values(personne)
+                return self.set_all_values(rs)
             else:
                 return None
         except Error as e:
@@ -87,70 +57,58 @@ class DAOAdministrateur:
         finally:
             if cursor:
                 cursor.close()
-    
-    # Mise à jour des informations de l'administrateur 
+
+    # Mise à jour des informations de l'administrateur
     def update_administrateur(self, un_admin):
-        dao_personne = DAOPersonne.get_instance()
-        return dao_personne.update_personne(un_admin)
+        sql = "UPDATE administrateur SET email = %s, mdp = %s, nom = %s, prenom = %s, num_tel = %s WHERE id_admin = %s"
+        valeurs = (un_admin.get_email(), un_admin.get_mdp(), un_admin.get_nom(), un_admin.get_prenom(), un_admin.get_num_tel(), un_admin.get_id_admin())
+        cursor = None
+        try:
+            connection = DAOSession.get_connexion()
+            cursor = connection.cursor()
+            cursor.execute(sql, valeurs)
+            connection.commit()
+            return True
+        except Error as e:
+            print("\n<--------------------------------------->")
+            print(f"Erreur lors de la mise à jour de l'administrateur : {e}")
+            print(sql)
+            print(valeurs)
+            print("rollback")
+            connection.rollback()
+            return False
+        finally:
+            if cursor:
+                cursor.close()
 
-    # Recherche d'administrateur en utilisant des critères
-    def select_administrateur(self, un_admin):
+    # Sélection de tous les administrateurs
+    def select_administrateurs(self):
         les_admins = []
-        sql = "SELECT p.* FROM personne p JOIN administrateur a ON p.id_personne = a.id_personne WHERE "
-        critere_id = un_admin.get_id_personne()
-        critere_nom = un_admin.get_nom()
-        critere_prenom = un_admin.get_prenom()
-        critere_email = un_admin.get_email()
-        valeurs = []
-
-        if critere_id is not None:
-            sql += "p.id_personne = %s"
-            valeurs.append(critere_id)
-        elif critere_nom is None and critere_prenom is None and critere_email is None:
-            sql = "SELECT p.* FROM personne p JOIN administrateur a ON p.id_personne = a.id_personne"
-        else:
-            conditions = []
-            if critere_nom is not None:
-                conditions.append("p.nom = %s")
-                valeurs.append(critere_nom)
-            if critere_prenom is not None:
-                conditions.append("p.prenom = %s")
-                valeurs.append(critere_prenom)
-            if critere_email is not None:
-                conditions.append("p.email = %s")
-                valeurs.append(critere_email)
-            sql += " AND ".join(conditions)
-
+        sql = "SELECT * FROM administrateur"
+        cursor = None
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)
-            cursor.execute(sql, tuple(valeurs))
+            cursor.execute(sql)
             rs = cursor.fetchall()
             for row in rs:
-                from entités.administrateur import Administrateur
-                admin = Administrateur(
-                    id_personne=row["id_personne"],
-                    email=row["email"],
-                    mot_de_passe=row["mot_de_passe"],
-                    nom=row["nom"],
-                    prenom=row["prenom"]
-                )
-                les_admins.append(admin)
+                les_admins.append(self.set_all_values(row))
         except Error as e:
+            print("\n<--------------------------------------->")
             print(f"Erreur lors de la recherche d'administrateurs : {e}")
             print(sql)
-            print(valeurs)
         finally:
             if cursor:
                 cursor.close()
         return les_admins
-    
+
     # Méthode pour transformer une ligne de résultats (rs) en un objet Administrateur
-    def set_all_values(self, personne):
+    def set_all_values(self, row):
         return Administrateur(
-            id_personne=personne.get_id_personne(),
-            email=personne.get_email(),
-            mot_de_passe=personne.get_mot_de_passe(),
-            nom=personne.get_nom(),
-            prenom=personne.get_prenom()
+            id_admin=row["id_admin"],
+            email=row["email"],
+            mdp=row["mdp"],
+            nom=row["nom"],
+            prenom=row["prenom"],
+            num_tel=row["num_tel"]
         )

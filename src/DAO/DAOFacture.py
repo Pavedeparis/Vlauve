@@ -1,6 +1,6 @@
 from mysql.connector import Error
 from DAO.DAOSession import DAOSession
-from entités.facture import Facture
+from entites.facture import Facture
 
 class DAOFacture:
     unique_instance = None
@@ -13,8 +13,8 @@ class DAOFacture:
 
     # Insertion d'une facture dans la BDD
     def insert_facture(self, une_facture):
-        sql = "INSERT INTO facture (id_abonne, date, montant, duree) VALUES (%s, %s, %s, %s)"
-        valeurs = (une_facture.get_abonne().get_id_abonne(), une_facture.get_date(), une_facture.get_montant(), une_facture.get_duree())
+        sql = "INSERT INTO facture (date, montant, carteAbo) VALUES (%s, %s, %s, %s)"
+        valeurs = (une_facture.get_date(), une_facture.get_montant(), une_facture.get_carteAbo())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -35,8 +35,8 @@ class DAOFacture:
                 
     # Suppression d'une facture dans la BDD
     def delete_facture(self, une_facture):
-        sql = "DELETE FROM facture WHERE id_facture = %s"
-        valeurs = (une_facture.get_id_facture(),)
+        sql = "DELETE FROM facture WHERE idFact = %s"
+        valeurs = (une_facture.get_idFact(),)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -55,9 +55,9 @@ class DAOFacture:
                 cursor.close()
 
     # Recherche d'une facture par son ID
-    def find_facture(self, id_facture):
-        sql = "SELECT * FROM facture WHERE id_facture = %s"
-        valeurs = (id_facture,)
+    def find_facture(self, idFact):
+        sql = "SELECT * FROM facture WHERE idFact = %s"
+        valeurs = (idFact,)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)
@@ -79,8 +79,8 @@ class DAOFacture:
 
     # Mise à jour d'une facture
     def update_facture(self, une_facture):
-        sql = "UPDATE facture SET date = %s, montant = %s, duree = %s WHERE id_facture = %s"
-        valeurs = (une_facture.get_date(), une_facture.get_montant(), une_facture.get_duree(), une_facture.get_id_facture())
+        sql = "UPDATE facture SET date = %s, montant = %s, WHERE idFact = %s"
+        valeurs = (une_facture.get_date(), une_facture.get_montant(), une_facture.get_idFact())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -99,27 +99,14 @@ class DAOFacture:
                 cursor.close()
 
     # Rechercher des factures selon des critères
-    def select_facture(self, critere_abonne=None, critere_date=None):
+    def select_facture(self):
         les_factures = []
-        sql = "SELECT * FROM facture WHERE "
-        valeurs = []
-
-        if critere_abonne:
-            sql += "id_abonne = %s"
-            valeurs.append(critere_abonne.get_id_abonne())
-        if critere_date:
-            if len(valeurs) > 0:
-                sql += " AND "
-            sql += "date = %s"
-            valeurs.append(critere_date)
-        
-        if len(valeurs) == 0:
-            sql = "SELECT * FROM facture"  # Si aucun critère n'est fourni, on sélectionne toutes les factures
+        sql = "SELECT * FROM facture"
 
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)
-            cursor.execute(sql, tuple(valeurs))
+            cursor.execute(sql)
             rs = cursor.fetchall()
             for row in rs:
                 les_factures.append(self.set_all_values(row))
@@ -127,7 +114,6 @@ class DAOFacture:
             print("\n<--------------------------------------->")
             print(f"Erreur lors de la recherche de facture : {e}")
             print(sql)
-            print(valeurs)
         finally:
             if cursor:
                 cursor.close()
@@ -135,6 +121,5 @@ class DAOFacture:
 
     # Méthode pour transformer chaque ligne de résultat en un objet Facture
     def set_all_values(self, rs):
-        abonne = DAOSession.get_instance().find_abonne(rs["id_abonne"])
-        une_facture = Facture(rs["id_facture"], abonne, rs["date"], rs["montant"], rs["duree"])
+        une_facture = Facture(rs["idFact"], rs["date"], rs["montant"], rs["carteAbo"])
         return une_facture

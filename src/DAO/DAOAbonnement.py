@@ -1,4 +1,4 @@
-from entités.abonnement import Abonnement
+from entites.abonnement import Abonnement
 from mysql.connector import Error
 from DAO.DAOSession import DAOSession
 
@@ -13,8 +13,8 @@ class DAOAbonnement:
 
     # Insertion d'un abonnement dans la BDD
     def insert_abonnement(self, un_abonnement):
-        sql = "INSERT INTO abonnement (id_abonnement) VALUES (%s)"
-        valeurs = (un_abonnement.get_id_abonnement(),)
+        sql = "INSERT INTO abonnement (idAbo) VALUES (%s)"
+        valeurs = (un_abonnement.get_idAbo(),)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -35,8 +35,8 @@ class DAOAbonnement:
 
     # Suppression d'un abonnement dans la BDD
     def delete_abonnement(self, un_abonnement):
-        sql = "DELETE FROM abonnement WHERE id_abonnement = %s"
-        valeurs = (un_abonnement.get_id_abonnement(),)
+        sql = "DELETE FROM abonnement WHERE idAbo = %s"
+        valeurs = (un_abonnement.get_idAbo(),)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -55,9 +55,9 @@ class DAOAbonnement:
                 cursor.close()
 
     # Recherche d'un abonnement par ID
-    def find_abonnement(self, id_abonnement):
-        sql = "SELECT * FROM abonnement WHERE id_abonnement = %s"
-        valeurs = (id_abonnement,)
+    def find_abonnement(self, idAbo):
+        sql = "SELECT * FROM abonnement WHERE idAbo = %s"
+        valeurs = (idAbo,)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)
@@ -77,10 +77,10 @@ class DAOAbonnement:
             if cursor:
                 cursor.close()
 
-    # Mise à jour des informations d'un abonnement
+    # Mise à jour des informations d'un abonnement : à revoir
     def update_abonnement(self, un_abonnement):
-        sql = "UPDATE abonnement SET id_abonnement = %s WHERE id_abonnement = %s"
-        valeurs = (un_abonnement.get_id_abonnement(), un_abonnement.get_id_abonnement())
+        sql = "UPDATE abonnement SET idAbo = %s WHERE idAbo = %s"
+        valeurs = (un_abonnement.get_idAbo(), un_abonnement.get_idAbo())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -99,22 +99,14 @@ class DAOAbonnement:
                 cursor.close()
 
     # recherche d'abonnements avec critères
-    def select_abonnement(self, un_abonnement):
+    def select_abonnement(self):
         les_abonnements = []
         sql = "SELECT * FROM abonnement WHERE "
-        critere_id = un_abonnement.get_id_abonnement()
-        valeurs = []
-
-        if critere_id is not None:
-            sql += "id_abonnement = %s"
-            valeurs.append(critere_id)
-        else:
-            sql = "SELECT * FROM abonnement"
 
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)
-            cursor.execute(sql, tuple(valeurs))
+            cursor.execute(sql)
             rs = cursor.fetchall()
             for row in rs:
                 les_abonnements.append(self.set_all_values(row))
@@ -122,7 +114,6 @@ class DAOAbonnement:
             print("\n<--------------------------------------->")
             print(f"Erreur lors de la recherche des abonnements : {e}")
             print(sql)
-            print(valeurs)
         finally:
             if cursor:
                 cursor.close()
@@ -130,5 +121,5 @@ class DAOAbonnement:
 
     # Méthode pour transformer une ligne de résultats en un objet Abonnement
     def set_all_values(self, rs):
-        un_abonnement = Abonnement(rs["id_abonnement"])
+        un_abonnement = Abonnement(rs["idAbo"])
         return un_abonnement

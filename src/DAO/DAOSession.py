@@ -1,12 +1,11 @@
 import mysql.connector
 from mysql.connector import Error 
 class DAOSession:
-    
     # Propriétés statiques
     HOST = "localhost"
     LOGIN = "root"
     MDP = ""
-    DB="lesVins2"
+    DB="bdd_python"
     connection = None
 
     @staticmethod

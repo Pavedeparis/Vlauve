@@ -1,5 +1,6 @@
 from mysql.connector import Error
 from DAO.DAOSession import DAOSession
+from entites.velo import Velo, StatutVelo
 
 class DAOVelo:
     unique_instance = None
@@ -12,8 +13,8 @@ class DAOVelo:
 
     # Insertion d'un vélo dans la BDD
     def insert_velo(self, un_velo):
-        sql = "INSERT INTO velo (ref_velo, electrique, statut, date, km_parcourus, id_station) VALUES (%s, %s, %s, %s, %s, %s)"
-        valeurs = (un_velo.get_ref_velo(), un_velo.get_electrique(), un_velo.get_statut(), un_velo.get_date(), un_velo.get_km_parcourus(), un_velo.get_station().get_id_station())
+        sql = "INSERT INTO velo (refVelo, electrique, batterie, statut, km_total, date_circu, numStation) VALUES (%s, %s, %s, %s, %s, %s)"
+        valeurs = (un_velo.get_refVelo(), un_velo.get_electrique(), un_velo.get_batterie(), un_velo.get_statut(), un_velo.get_km_total(), un_velo.get_date_circu(), un_velo.get_station().get_numStation())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -34,8 +35,8 @@ class DAOVelo:
 
     # Suppression d'un vélo dans la BDD
     def delete_velo(self, un_velo):
-        sql = "DELETE FROM velo WHERE ref_velo = %s"
-        valeurs = (un_velo.get_ref_velo(),)
+        sql = "DELETE FROM velo WHERE refVelo = %s"
+        valeurs = (un_velo.get_refVelo(),)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -54,9 +55,9 @@ class DAOVelo:
                 cursor.close()
 
     # Recherche d'un vélo par sa référence
-    def find_velo(self, ref_velo):
-        sql = "SELECT * FROM velo WHERE ref_velo = %s"
-        valeurs = (ref_velo,)
+    def find_velo(self, refVelo):
+        sql = "SELECT * FROM velo WHERE refVelo = %s"
+        valeurs = (refVelo,)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)
@@ -75,11 +76,30 @@ class DAOVelo:
         finally:
             if cursor:
                 cursor.close()
+    
+    def find_velos_by_station(self, numStation):
+        connection = DAOSession.get_connexion()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM velo WHERE numStation = %s", (numStation,))
+
+        velos = []
+        for row in cursor.fetchall():
+            velo = Velo(
+                refVelo=row['refVelo'],
+                electrique=bool(row['electrique']),
+                batterie=row['batterie'],
+                statut=StatutVelo(row['statut']),
+                km_total=row['km_total'],
+                date_circu=row['date_circu'],
+                numStation=row['numStation']
+            )
+            velos.append(velo)
+        return velos
 
     # Mise à jour d'un vélo dans la BDD
     def update_velo(self, un_velo):
-        sql = "UPDATE velo SET electrique = %s, statut = %s, date = %s, km_parcourus = %s, id_station = %s WHERE ref_velo = %s"
-        valeurs = (un_velo.get_electrique(), un_velo.get_statut(), un_velo.get_date(), un_velo.get_km_parcourus(), un_velo.get_station().get_id_station(), un_velo.get_ref_velo())
+        sql = "UPDATE velo SET electrique = %s, batterie = %s, statut = %s, km_total = %s, date_circu = %s, numStation = %s WHERE refVelo = %s"
+        valeurs = (un_velo.get_electrique(), un_velo.get_batterie(), un_velo.get_statut(), un_velo.get_km_total(), un_velo.get_date_circu(), un_velo.get_station().get_numStation(), un_velo.get_refVelo())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -97,36 +117,40 @@ class DAOVelo:
             if cursor:
                 cursor.close()
 
-    # Recherche de vélos en utilisant des critères (ex: ref_velo, statut, km_parcourus, etc.)
+    # Recherche de vélos en utilisant des critères 
     def select_velo(self, un_velo):
         les_velos = []
         sql = "SELECT * FROM velo WHERE "
-        critere_ref_velo = un_velo.get_ref_velo()
+        critere_refVelo = un_velo.get_refVelo()
+        critere_batterie = un_velo.get_batterie(),
         critere_statut = un_velo.get_statut()
         critere_electrique = un_velo.get_electrique()
-        critere_km_parcourus = un_velo.get_km_parcourus()
+        critere_date_circu = un_velo.get_date_circu()
         critere_station = un_velo.get_station()
         valeurs = []
 
-        if critere_ref_velo is not None:
-            sql += "ref_velo = %s"
-            valeurs.append(critere_ref_velo)
-        elif critere_statut is None and critere_electrique is None and critere_km_parcourus is None and critere_station is None:
+        if critere_refVelo is not None:
+            sql += "refVelo = %s"
+            valeurs.append(critere_refVelo)
+        elif critere_statut is None and critere_electrique is None and critere_date_circu is None and critere_station is None:
             sql = "SELECT * FROM velo" 
         else:
             conditions = []
+            if critere_batterie is not None:
+                conditions.append("batterie = %s")
+                valeurs.append(critere_batterie)
             if critere_statut is not None:
                 conditions.append("statut = %s")
                 valeurs.append(critere_statut)
             if critere_electrique is not None:
                 conditions.append("electrique = %s")
                 valeurs.append(critere_electrique)
-            if critere_km_parcourus is not None:
-                conditions.append("km_parcourus = %s")
-                valeurs.append(critere_km_parcourus)
+            if critere_date_circu is not None:
+                conditions.append("date_circu = %s")
+                valeurs.append(critere_date_circu)
             if critere_station is not None:
-                conditions.append("id_station = %s")
-                valeurs.append(critere_station.get_id_station())  # Assuming the station object has get_id_station
+                conditions.append("numStation = %s")
+                valeurs.append(critere_station.get_numStation()) 
             sql += " AND ".join(conditions)
 
         try:
@@ -148,7 +172,35 @@ class DAOVelo:
 
     # Méthode pour transformer une ligne de résultats en un objet Velo
     def set_all_values(self, rs):
-        from entités.velo import Velo
-        station = DAOSession.get_instance().find_station(rs["id_station"])  # Une méthode dans DAOSession
-        un_velo = Velo(rs["ref_velo"], rs["electrique"], rs["statut"], rs["date"], rs["km_parcourus"], station)
+        from entites.velo import Velo
+        from DAO.DAOStation import DAOStation
+        station = DAOStation.get_instance().find_station(rs["numStation"]) 
+        un_velo = Velo(
+            refVelo=rs["refVelo"],
+            electrique=bool(rs["electrique"]),
+            batterie=rs["batterie"],
+            statut=StatutVelo(rs["statut"]),
+            date_circu=rs["date_circu"],
+            km_total=rs["km_total"],
+            numStation=rs["numStation"]
+        )
+
         return un_velo
+
+    def verifier_disponibilite(self, refVelo):
+        sql = "SELECT statut FROM velo WHERE refVelo = %s"
+        valeurs = (refVelo,)
+        try:
+            connection = DAOSession.get_connexion()
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(sql, valeurs)
+            rs = cursor.fetchone()
+            if rs:
+                return rs["statut"] == "disponible"
+            return False
+        except Error as e:
+            print(f"Erreur lors de la vérification de la disponibilité du vélo : {e}")
+            return False
+        finally:
+            if cursor:
+                cursor.close()
