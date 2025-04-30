@@ -18,7 +18,6 @@ def centrer_fenetre(fenetre, largeur, hauteur):
 if __name__ == "__main__":
     # Récupérer les utilisateurs depuis la base de données
     abonnés = DAOAbonne.get_instance().select_abonnes()
-    print("abonnes trouvés dans la bdd:", abonnés)
     administrateurs = DAOAdministrateur.get_instance().select_administrateurs()
     utilisateurs = abonnés + administrateurs
 

@@ -48,8 +48,4 @@ class ConnexionFrame(ttk.Frame):
         # Vérification des identifiants
         if utilisateur.verifier_identifiants(email, mdp):
             messagebox.showinfo("Connexion réussie", f"Bienvenue, {utilisateur.get_nom()}!")
-        if isinstance(utilisateur, Abonne):  
-            self.controller.afficher_trajets(utilisateur)
-        elif isinstance(utilisateur, Administrateur):  
-            self.controller.afficher_accueil(utilisateur)  
-
+        self.controller.afficher_accueil(utilisateur)

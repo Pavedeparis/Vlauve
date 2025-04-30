@@ -13,7 +13,7 @@ class AppController:
     def __init__(self, container, utilisateurs):
         self.container = container
         self.frame_courant = None
-        self.utilisateurs = self.charger_utilisateurs()  # Charger les utilisateurs
+        self.utilisateurs = self.charger_utilisateurs() 
         
         # Debugging: vérifier si utilisateurs est bien peuplée
         print("Utilisateurs chargés :", self.utilisateurs)
@@ -21,7 +21,7 @@ class AppController:
         if not self.utilisateurs:  # Si la liste est vide ou None
             print("Erreur : Aucun utilisateur trouvé.")
             messagebox.showerror("Erreur", "Aucun utilisateur trouvé.")
-            return  # Arrêter la création de l'application si les utilisateurs sont manquants
+            return 
 
         self.afficher_connexion()
 

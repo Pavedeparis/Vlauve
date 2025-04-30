@@ -62,6 +62,7 @@ class DAOStation:
     def find_station(self, numStation):
         sql = "SELECT * FROM station WHERE numStation = %s"
         valeurs = (numStation,)
+        cursor = None  # <-- ajout ici
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)
@@ -78,6 +79,7 @@ class DAOStation:
         finally:
             if cursor:
                 cursor.close()
+
 
     # Mise à jour d'une station
     def update_station(self, une_station):

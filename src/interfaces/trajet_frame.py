@@ -12,6 +12,8 @@ class TrajetFrame(ttk.Frame):
         self.controller = controller
         self.abonne = abonne
 
+        ttk.Label(self, text="Vos trajets", font=("Helvetica", 16)).pack(pady=30)
+
         # Variables pour les filtres
         self.filtre_date = tk.StringVar(value="tous")  # "ancien", "recent", "tous"
         self.filtre_distance = tk.StringVar(value="tous")  # "grande", "petite", "tous"

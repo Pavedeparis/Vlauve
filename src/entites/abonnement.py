@@ -1,6 +1,6 @@
 class Abonnement:
     def __init__(self, idAbo, type_abo, sous_type):
-        self._idAbo = idAbo
+        self.idAbo = idAbo
         
         type_abo = ["Annuel", "Occasionnel"]
         if type not in type_abo:
@@ -13,11 +13,11 @@ class Abonnement:
         self.sous_type = sous_type
 
     # Getters 
-    def get_idAbo(self): return self._id_abo
+    def get_idAbo(self): return self.idAbo
     def get_type_abo(self): return self.type_abo
     def get_sous_type(self): return self.sous_type
 
     # Setters
-    def set_idAbo(self, id_abo): self._id_abo = id_abo
+    def set_idAbo(self, id_abo): self.idAbo = id_abo
     def set_type_abo(self, type_abo): self.type_abo = type_abo
     def set_sous_type(self, sous_type): self.sous_type = sous_type

@@ -48,14 +48,56 @@ class Station:
     def get_reseau(self): return self.reseau
     def set_reseau(self, reseau): self.reseau = reseau
 
-    # Affichage de la station
+    # Méthode pour affichery de la station
     def __str__(self):
-        nb_electriques = self.compter_velos_disponibles(True)
-        nb_mecaniques = self.compter_velos_disponibles(False)
-        return f"{self.nom} ({nb_electriques} élect. / {nb_mecaniques} méc.)"
+        infos = [f"Station #{self.numStation}"]
 
+        if self.nom:
+            infos.append(f"Nom: {self.nom}")
+        if self.nom_rue:
+            infos.append(f"Adresse: {self.num_rue} {self.nom_rue}")
+        if self.gps:
+            infos.append(f"GPS: {self.gps}")
+        if self.place_elec is not None:
+            infos.append(f"Places électriques: {self.place_elec}")
+        if self.place_non_elec is not None:
+            infos.append(f"Places mécaniques: {self.place_non_elec}")
+        if self.reseau:
+            infos.append(f"Réseau: {self.reseau.nom}")
+
+        # Affiche aussi le nombre de vélos s'ils existent
+        nb_total = len(self.velos)
+        if nb_total > 0:
+            nb_elec = sum(1 for v in self.velos if v.electrique)
+            nb_meca = nb_total - nb_elec
+            infos.append(f"Vélos: {nb_total} (Électriques: {nb_elec}, Mécaniques: {nb_meca})")
+
+        return " | ".join(infos)
+    
     # Méthodes
+    def louer_velo(self):
+        """Loue un vélo disponible et change son état."""
+        for velo in self.velos:
+            if velo.get_statut() == StatutVelo.DISPONIBLE:
+                velo.set_statut(StatutVelo.EN_CIRCULATION)  # Changer le statut
+                return velo
+        return None  # Aucun vélo disponible
+
+    def retourner_velo(self):
+        """Retourne un vélo en circulation."""
+        for velo in self.velos:
+            if velo.get_statut() == StatutVelo.EN_CIRCULATION:
+                velo.set_statut(StatutVelo.DISPONIBLE)  # Changer le statut
+                return velo
+        return None  # Aucun vélo à retourner
+
+    def compter_velos_disponibles(self, electrique=True):
+        return sum(1 for v in self.velos if v.electrique == electrique and v.get_statut() == StatutVelo.DISPONIBLE)
+
+
+    # Méthodes Pierre
     """
+    @staticmethod
     def importStation(fichier_csv):
         
         stations = []
@@ -74,14 +116,13 @@ class Station:
                 capacite_mecanique = capacite_totale - capacite_electrique
 
                 station = Station(
-                    id_station=id_courant,  
+                    numStation=id_courant,  
                     nom=nom_station,
-                    nomrue=adresse,
-                    numrue=0,         
                     gps="",
-                    capacite_mecanique=capacite_mecanique,
-                    capacite_electrique=capacite_electrique,
-                    capacite_totale=capacite_totale,
+                    nom_rue=adresse,
+                    num_rue=0,              
+                    place_elec=capacite_electrique,
+                    place_non_elec=capacite_mecanique,
                     reseau=None,
                 )
             
@@ -89,45 +130,16 @@ class Station:
                 id_courant +=1
 
         return stations
-    """
-
-    def louer_velo(self):
-        """Loue un vélo disponible et change son état."""
-        for velo in self.velos:
-            if velo.get_statut() == StatutVelo.DISPONIBLE:
-                velo.set_statut(StatutVelo.EN_CIRCULATION)  # Changer le statut
-                return velo
-        return None  # Aucun vélo disponible
-
-    def retourner_velo(self):
-        """Retourne un vélo en circulation."""
-        for velo in self.velos:
-            if velo.get_statut() == StatutVelo.EN_CIRCULATION:
-                velo.set_statut(StatutVelo.DISPONIBLE)  # Changer le statut
-                return velo
-        return None  # Aucun vélo à retourner
-
-    def compter_velos_disponibles(self, electrique=True):
-        """Compte le nombre de vélos disponibles dans la station selon le type (électrique ou mécanique)."""
-        return sum(1 for v in self.velos if v.electrique == electrique and v.get_statut() == StatutVelo.DISPONIBLE)
-
+    
+    # Méthode pour ajouter un vélo à une station
     def ajouter_velo(self, velo):
-        """Ajoute un vélo à la station."""
         self.velos.append(velo)
 
-    """
+    # Méthode pour compte le nombre de vélos disponibles selon le type
     def compter_velos_disponibles(self, electrique=True):
-        # Compte le nombre de vélos disponibles selon le type.
-        return sum(1 for v in self.liste_de_velo if v.electrique == electrique and v.disponible)
+        return sum(1 for v in self.velos if v.electrique == electrique and v.statut == StatutVelo.DISPONIBLE)
 
-    def louer_velo(self):
-        # Loue un vélo disponible et change son état.
-        for velo in self.liste_de_velo:
-            if velo.est_disponible:
-                velo.est_disponible = False
-                return velo
-        return None  # Aucun vélo disponible
-
+    
     def retourner_velo(self):
         # Retourne un vélo en circulation.
         for velo in self.velos:
@@ -135,4 +147,12 @@ class Station:
                 velo.est_disponible = True
                 return velo
         return None  # Aucun vélo à retourner
+    
+    def louer_velo(self):
+        # Loue un vélo disponible et change son état.
+        for velo in self.velos:
+            if velo.est_disponible:
+                velo.est_disponible = False
+                return velo
+        return None  # Aucun vélo disponible
     """

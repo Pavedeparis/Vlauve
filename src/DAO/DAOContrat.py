@@ -13,31 +13,25 @@ class DAOContrat:
 
     # Insertion d'un contrat
     def insert_contrat(self, un_contrat):
-        sql = "INSERT INTO contrat (idAbo, carteAbo, date_debut, date_fin, montant, garantie, num_carte_identite) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-        valeurs = (un_contrat.get_idAbo(), 
-                   un_contrat.get_id_abonne(),
-                   un_contrat.get_date_debut(), 
-                   un_contrat.get_date_fin(),
-                   un_contrat.get_montant(),
-                   un_contrat.get_garantie(),
-                   un_contrat.carte_identite())
+        sql = "INSERT INTO contrat (idAbo, carteAbo, date_debut, date_fin, montant, garantie, carte_identite) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        valeurs = (
+            un_contrat.idAbo, un_contrat.carteAbo, un_contrat.date_debut, un_contrat.date_fin,
+            un_contrat.montant, un_contrat.garantie, un_contrat.carte_identite
+        )
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
             cursor.execute(sql, valeurs)
-            cle = cursor.lastrowid
-            return cle
+            connection.commit()
+            return cursor.lastrowid
         except Error as e:
-            print("\n<--------------------------------------->")
-            print(f"Erreur lors de la création du contrat : {e}")
-            print(sql)
-            print(valeurs)
-            print("rollback")
+            print(f"Erreur insertion contrat : {e}")
             connection.rollback()
             return -1
         finally:
             if cursor:
                 cursor.close()
+
     
     # Suppression d'un contrat
     def delete_contrat(self, un_contrat):
@@ -137,6 +131,6 @@ class DAOContrat:
             rs["date_fin"], 
             rs["montant"], 
             rs["garantie"], 
-            rs["num_carte_identite"]
+            rs["carte_identite"]
             )
         return un_contrat

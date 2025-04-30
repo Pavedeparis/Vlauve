@@ -1,4 +1,5 @@
 from enum import Enum
+from entites import station as s
 
 class StatutVelo(Enum):
     DISPONIBLE = "Disponible"
@@ -9,7 +10,7 @@ class StatutVelo(Enum):
     NON_DISPONIBLE = "Non disponible"
 
 class Velo:
-    def __init__(self, refVelo, electrique, batterie, statut: StatutVelo, date_circu, km_total, numStation):
+    def __init__(self, refVelo, electrique, batterie, statut: StatutVelo, date_circu, km_total, numStation: s):
         self.refVelo = refVelo
         self.electrique = electrique
         self.batterie = batterie if electrique else None

@@ -18,6 +18,14 @@ class StationsFrame(ttk.Frame):
         self.idStat_entry.pack(pady=5)
         ttk.Button(self, text="Voir les vélos de la station", command=self.afficher_velos).pack(pady=5)
 
+        bouton_frame = ttk.Frame(self)
+        bouton_frame.pack(pady=10)
+
+        if isinstance(self.utilisateur, Administrateur):
+            ttk.Button(bouton_frame, text="Ajouter une Station", command=self.ajouter_station).grid(row=0, column=0, padx=5)
+
+        ttk.Button(bouton_frame, text="Retour", command=self.retour).grid(row=0, column=1, padx=5)
+
         # Tableau des stations
         self.tab = ttk.Treeview(self, columns=("ID", "Nom", "NbPlaces", "nbVE", "nbVNE"), show="headings")
         self.tab.heading("ID", text="ID station")
@@ -26,14 +34,6 @@ class StationsFrame(ttk.Frame):
         self.tab.heading("nbVE", text="Vélos electriques disponibles")
         self.tab.heading("nbVNE", text="Vélos non electriques disponibles")
         self.tab.pack(expand=True, fill="both", padx=20, pady=10)
-
-        bouton_frame = ttk.Frame(self)
-        bouton_frame.pack(pady=10)
-
-        if isinstance(self.utilisateur, Administrateur):
-            ttk.Button(bouton_frame, text="Ajouter une Station", command=self.ajouter_station).grid(row=0, column=0, padx=5)
-
-        ttk.Button(bouton_frame, text="Retour", command=self.retour).grid(row=0, column=1, padx=5)
 
         self.charger_stations()
 
@@ -61,8 +61,8 @@ class StationsFrame(ttk.Frame):
 
             # Calculer le nombre de vélos disponibles (électriques et non électriques)
             nb_places_totales = station.get_place_elec() + station.get_place_non_elec()
-            nb_velos = station.compter_velos_disponibles(True) + station.compter_velos_disponibles(True)
-            nb_velos_disponibles = station.compter_velos_disponibles(True) + station.compter_velos_disponibles(False)
+            nb_velos = station.compter_velos_disponibles(True)
+            nb_velos_disponibles = station.compter_velos_disponibles(False)
 
             self.tab.insert('', 'end', values=(
                 station.get_numStation(),
@@ -77,8 +77,7 @@ class StationsFrame(ttk.Frame):
         form.title("Ajouter une Station")
 
         # Champs à remplir
-        labels = ["Nom Station", "GPS", "Nom Rue", "Numéro Rue", 
-                "Places Vélos électriques", "Places Vélos non électriques", "Numéro Réseau"]
+        labels = ["Nom Station", "GPS", "Nom Rue", "Numéro Rue", "Places Vélos électriques", "Places Vélos non électriques", "Numéro Réseau"]
         entries = []
 
         for idx, label in enumerate(labels):
@@ -88,11 +87,9 @@ class StationsFrame(ttk.Frame):
             entries.append(entry)
 
         # Bouton de validation
-        ttk.Button(form, text="Valider", command=lambda: self.enregistrer_station(
-            entries, form
-        )).grid(row=len(labels), column=0, columnspan=2, pady=10)
+        ttk.Button(form, text="Valider", command=lambda: self.enregistrer_station( entries, form)).grid(row=len(labels), column=0, columnspan=2, pady=10) # ajout du lambda sinon bug
 
-
+    # Méthode pour enregister une station
     def enregistrer_station(self, entries, form):
         try:
             from entites.station import Station
@@ -114,11 +111,11 @@ class StationsFrame(ttk.Frame):
 
             # Création d'un objet Station
             station = Station(
-                None,  # numStation sera généré automatiquement par la BDD
+                None,  
                 nom,
+                gps,
                 nom_rue,
                 num_rue,
-                gps,
                 place_elec,
                 place_non_elec,
                 reseau

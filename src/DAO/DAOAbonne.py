@@ -13,8 +13,8 @@ class DAOAbonne:
 
     # Insertion d'un abonné dans la BDD
     def insert_abonne(self, un_abonne):
-        sql = "INSERT INTO abonne (email, mdp, nom, prenom, num_tel, num_rue, nom_rue, num_cb, ville) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
-        valeurs = (un_abonne.get_email(), un_abonne.get_mdp(), un_abonne.get_nom(), un_abonne.get_prenom(), un_abonne.get_num_tel(), un_abonne.get_num_rue(), un_abonne.get_nom_rue(), un_abonne.get_num_cb(), un_abonne.get_ville())
+        sql = "INSERT INTO abonne (email, mdp, nom, prenom, num_tel, num_rue, nom_rue, num_cb) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+        valeurs = (un_abonne.get_email(), un_abonne.get_mdp(), un_abonne.get_nom(), un_abonne.get_prenom(), un_abonne.get_num_tel(), un_abonne.get_num_rue(), un_abonne.get_nom_rue(), un_abonne.get_num_cb())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -62,8 +62,7 @@ class DAOAbonne:
                 rs["num_tel"], 
                 rs["num_rue"], 
                 rs["nom_rue"], 
-                rs["num_cb"], 
-                rs["ville"]
+                rs["num_cb"]
                 )
             return abonne
         except KeyError as e:
@@ -90,8 +89,7 @@ class DAOAbonne:
                         num_tel=row['num_tel'],
                         num_rue=row['num_rue'],
                         nom_rue=row['nom_rue'],
-                        num_cb=row['num_cb'],
-                        ville=row['ville']
+                        num_cb=row['num_cb']
                     )
                     abonnes.append(abonne)
                 except KeyError as e:

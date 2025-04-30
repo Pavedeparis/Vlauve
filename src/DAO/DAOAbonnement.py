@@ -13,8 +13,9 @@ class DAOAbonnement:
 
     # Insertion d'un abonnement dans la BDD
     def insert_abonnement(self, un_abonnement):
-        sql = "INSERT INTO abonnement (idAbo) VALUES (%s)"
-        valeurs = (un_abonnement.get_idAbo(),)
+        sql = "INSERT INTO abonnement (idAbo, type_abo, sous_type) VALUES (%s, %s, %s)"
+        valeurs = (un_abonnement.get_idAbo(), un_abonnement.get_type_abo(), un_abonnement.get_sous_type())
+
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -79,8 +80,9 @@ class DAOAbonnement:
 
     # Mise à jour des informations d'un abonnement : à revoir
     def update_abonnement(self, un_abonnement):
-        sql = "UPDATE abonnement SET idAbo = %s WHERE idAbo = %s"
-        valeurs = (un_abonnement.get_idAbo(), un_abonnement.get_idAbo())
+        sql = "UPDATE abonnement SET type_abo = %s, sous_type = %s WHERE idAbo = %s"
+        valeurs = (un_abonnement.get_type_abo(), un_abonnement.get_sous_type(), un_abonnement.get_idAbo())
+
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -101,7 +103,7 @@ class DAOAbonnement:
     # recherche d'abonnements avec critères
     def select_abonnement(self):
         les_abonnements = []
-        sql = "SELECT * FROM abonnement WHERE "
+        sql = "SELECT * FROM abonnement "
 
         try:
             connection = DAOSession.get_connexion()
@@ -118,8 +120,38 @@ class DAOAbonnement:
             if cursor:
                 cursor.close()
         return les_abonnements
+    
+    # Méthode qui retourne l'abonnement correspondant aux critères fournis (pour l'inscription notamment)
+    def select_abonnement_criteres(self, type_abo=None, sous_type=None):
+        sql = "SELECT * FROM abonnement WHERE 1=1" # Astuce de WHERE 1=1 pour rendre ça dynamique et ne pas s'encombrer avec des doublons de WHERE
+        valeurs = []
+
+        if type_abo:
+            sql += " AND type_abo = %s"
+            valeurs.append(type_abo)
+        if sous_type is not None:
+            sql += " AND sous_type = %s"
+            valeurs.append(sous_type)
+
+        try:
+            connection = DAOSession.get_connexion()
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(sql, tuple(valeurs))
+            rs = cursor.fetchone()
+            if rs:
+                return self.set_all_values(rs)
+            return None
+        except Error as e:
+            print("\n<--------------------------------------->")
+            print(f"Erreur lors de la recherche avec critères : {e}")
+            print(sql)
+            print(valeurs)
+            return None
+        finally:
+            if cursor:
+                cursor.close()
+
 
     # Méthode pour transformer une ligne de résultats en un objet Abonnement
     def set_all_values(self, rs):
-        un_abonnement = Abonnement(rs["idAbo"])
-        return un_abonnement
+        return Abonnement(rs["idAbo"], rs["type_abo"], rs["sous_type"])
