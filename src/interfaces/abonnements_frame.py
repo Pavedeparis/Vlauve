@@ -95,16 +95,16 @@ class AbonnementsFrame(ttk.Frame):
         type_abo = self.type_entry.get()
         sous_type = self.sous_type_entry.get()
 
-        # Validation de base
+        # Vérifier que tous les champs sont saisis
         if not type_abo or not sous_type:
             messagebox.showerror("Erreur", "Veuillez remplir tous les champs.")
             return
 
-        # Création de l'objet Abonnement
+        # Créer l'abonnement
         abo = Abonnement(None, type_abo, sous_type)
         dao_abo = DAOAbonnement.get_instance()
 
-        # Insertion dans la base de données via DAO
+        # L'insérer dans la BDD grâce au DAO
         result = dao_abo.insert_abonnement(abo)
 
         if result == -1:
@@ -120,6 +120,7 @@ class AbonnementsFrame(ttk.Frame):
         type_abo = self.type_modif_entry.get()
         sous_type = self.sous_type_modif_entry.get()
 
+        # Vérifier que tous les champs sont saisis
         if not abo_id or not type_abo or not sous_type:
             messagebox.showerror("Erreur", "Veuillez remplir tous les champs.")
             return
@@ -132,25 +133,26 @@ class AbonnementsFrame(ttk.Frame):
             messagebox.showerror("Erreur", "Abonnement introuvable.")
             return
 
-        # Mise à jour de l'abonnement
+        # Mettre à jour l'abonnement
         abo.set_type_abo(type_abo)
         abo.set_sous_type(sous_type)
         result = dao_abo.update_abonnement(abo)
 
-        # Vérification de l'action
+        # Vérifier que l'action s'est réalisée
         if result:
             messagebox.showinfo("Succès", "Abonnement modifié avec succès.")
             self.charger_abonnements() 
         else:
             messagebox.showerror("Erreur", "Échec de la modification de l'abonnement.")
 
-
+    # Méthode pour supprimer un abonnement en fonction de son id
     def supprimer_abonnement(self):
         abo_id = self.id_supp_entry.get()
         if not abo_id:
             messagebox.showerror("Erreur", "Veuillez entrer l'ID de l'abonnement à supprimer.")
             return
         
+        # Rechercher l'abonnement dans la BDD
         dao_abo = DAOAbonnement.get_instance()
         abo = dao_abo.find_abonnement(abo_id)
 
@@ -158,7 +160,7 @@ class AbonnementsFrame(ttk.Frame):
             messagebox.showerror("Erreur", "Abonnement introuvable.")
             return
 
-        # Confirmation avant suppression
+        # Confirmer l'action avant de supprimer
         confirmation = messagebox.askyesno("Confirmation", f"Voulez-vous vraiment supprimer l'abonnement {abo_id}?")
         if confirmation:
             result = dao_abo.delete_abonnement(abo_id)

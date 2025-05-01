@@ -21,6 +21,7 @@ class StationsFrame(ttk.Frame):
         bouton_frame = ttk.Frame(self)
         bouton_frame.pack(pady=10)
 
+        # Admin: ajouter une station
         if isinstance(self.utilisateur, Administrateur):
             ttk.Button(bouton_frame, text="Ajouter une Station", command=self.ajouter_station).grid(row=0, column=0, padx=5)
 
@@ -72,6 +73,7 @@ class StationsFrame(ttk.Frame):
                 nb_velos_disponibles
             ))
 
+    # Admin: méthode pour ajouter une station à la BDD
     def ajouter_station(self):
         form = tk.Toplevel(self)
         form.title("Ajouter une Station")
@@ -131,7 +133,7 @@ class StationsFrame(ttk.Frame):
         except Exception as e:
             print(f"Erreur lors de l'ajout de la station : {e}")
 
-
+    # Méthode pour rediriger l'utilisateur vers la page des vélos de la station indiquée 
     def afficher_velos(self):
         id_text = self.idStat_entry.get()
         if id_text.isdigit():

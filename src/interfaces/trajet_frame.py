@@ -18,9 +18,17 @@ class TrajetFrame(ttk.Frame):
         self.filtre_date = tk.StringVar(value="rien")  # valeur par défaut
         self.filtre_distance = tk.StringVar(value="rien") # valeur par défaut
 
-        # Frame horizontal combiné (filtres + boutons)
+        # Frame pour les filtres et les boutons
         top_controls = ttk.Frame(self)
         top_controls.pack(padx=10, pady=10, fill="x")
+
+        # Sous-frame pour les boutons
+        bouton_frame = ttk.Frame(top_controls)
+        bouton_frame.grid(row=0, column=0, padx=5)
+
+        ttk.Button(bouton_frame, text="Enregistrer un Trajet", command=self.ajouter_trajet).grid(row=0, column=0, padx=5)
+        ttk.Button(bouton_frame, text="Exporter Historique", command=self.exporter_trajets).grid(row=0, column=1, padx=5)
+        ttk.Button(bouton_frame, text="Retour", command=self.retour).grid(row=0, column=2, padx=5)
 
         # Sous-frame pour le filtre date
         fdate_frame = ttk.LabelFrame(top_controls, text="Filtrer par date")
@@ -38,15 +46,6 @@ class TrajetFrame(ttk.Frame):
         ttk.Radiobutton(fdistance_frame, text="Plus grande distance", value="grande", variable=self.filtre_distance, command=self.charger_trajets).grid(row=0, column=1, padx=2)
         ttk.Radiobutton(fdistance_frame, text="Plus petite distance", value="petite", variable=self.filtre_distance, command=self.charger_trajets).grid(row=0, column=2, padx=2)
 
-        # Sous-frame pour les boutons
-        bouton_frame = ttk.Frame(top_controls)
-        bouton_frame.grid(row=0, column=0, padx=5)
-
-        ttk.Button(bouton_frame, text="Enregistrer un Trajet", command=self.ajouter_trajet).grid(row=0, column=0, padx=5)
-        ttk.Button(bouton_frame, text="Exporter Historique", command=self.exporter_trajets).grid(row=0, column=1, padx=5)
-        ttk.Button(bouton_frame, text="Retour", command=self.retour).grid(row=0, column=2, padx=5)
-
-
         # Tableau des trajets
         self.tree = ttk.Treeview(self, columns=("ID", "Départ", "Arrivée", "Début", "Fin", "KM", "Vélo"), show="headings")
         self.tree.heading("ID", text="ID Trajet")
@@ -58,12 +57,14 @@ class TrajetFrame(ttk.Frame):
         self.tree.heading("Vélo", text="Vélo utilisé")
         self.tree.pack(expand=True, fill="both", padx=20, pady=10)
 
-    # Charger trajets
+        # Charger trajets
         self.charger_trajets()
     
+    # Méthode intermédiaire pour retourner à la page précédente
     def retour(self):
         self.controller.afficher_accueil(self.abonne)
 
+    # Charger les trajets de l'abonné et l'afficher dans le tableau
     def charger_trajets(self):
         daoTrajet = DAOTrajet.get_instance()
         trajets = daoTrajet.select_trajets_abonne(self.abonne.get_carteAbo())

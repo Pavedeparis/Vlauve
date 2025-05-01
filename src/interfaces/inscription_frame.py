@@ -74,6 +74,7 @@ class InscriptionFrame(ttk.Frame):
         ttk.Label(adresse_frame, text="Code Postal").grid(row=2, column=0, padx=5, pady=5, sticky="w")
         self.code_postal_entry = ttk.Entry(adresse_frame, width=25)
         self.code_postal_entry.grid(row=2, column=1, padx=5, pady=5, sticky="w")
+        
         # Frame pour l'abonnement
         abo_frame = ttk.LabelFrame(blocs_frame, text="Abonnement", padding=(10, 10))
         abo_frame.grid(row=0, column=1, rowspan=2, padx=10, sticky="n")
@@ -181,7 +182,6 @@ class InscriptionFrame(ttk.Frame):
         if carteAbo == -1:
             messagebox.showerror("Erreur", "Échec de création de l'abonné.")
             return
-        
 
         # 2. Trouver l'ID de l'abonnement sélectionné
         type_abo = self.type_abo_var.get()
@@ -213,7 +213,7 @@ class InscriptionFrame(ttk.Frame):
             sous_type_final = duree + jours_label
 
 
-        # Recherche de l'abonnement en fonction du type et sous-type/durée
+        # Recherche de l'abonnement en fonction du type et sous-type
         dao_abo = DAOAbonnement.get_instance()
         sous_type_final = sous_type if type_abo == "Annuel" else (duree + (" jour" if duree == "1" else " jours"))
         abo = dao_abo.select_abonnement_criteres(type_abo=type_abo, sous_type=sous_type_final)
@@ -230,10 +230,8 @@ class InscriptionFrame(ttk.Frame):
 
         # 3. Créer le contrat entre l'abonné et l'abonnement
         date_debut = datetime.today().date()
-        if type_abo == "Annuel":
-            date_fin = date_debut + timedelta(days=365)
-        else:
-            date_fin = date_debut + timedelta(days=int(duree))
+        if type_abo == "Annuel": date_fin = date_debut + timedelta(days=365)
+        else: date_fin = date_debut + timedelta(days=int(duree))
 
         try:
             montant = float(self.montant_entry.get())
@@ -252,4 +250,5 @@ class InscriptionFrame(ttk.Frame):
             messagebox.showerror("Erreur", "Échec de création du contrat.")
         else:
             messagebox.showinfo("Succès", "Compte et contrat créés avec succès !")
-            self.controller.afficher_accueil(abonne)
+            # self.controller.afficher_connexion(abonne) 
+            self.controller.afficher_connexion()
