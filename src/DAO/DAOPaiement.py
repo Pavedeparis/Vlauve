@@ -12,15 +12,15 @@ class DAOPaiement:
         return DAOPaiement.unique_instance
 
     # Insertion d'un paiement dans la BDD
-    def insert_paiement(self, un_paiement):
+    def insert_paiement(self, nouv_paie):
         sql = "INSERT INTO paiement (date, montant, idFact) VALUES (%s, %s, %s)"
-        valeurs = (un_paiement.get_date(), un_paiement.get_montant(), un_paiement.get_idFact())
+        valeurs = (nouv_paie.get_date(), nouv_paie.get_montant(), nouv_paie.get_idFact())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
             cursor.execute(sql, valeurs)
-            cle = cursor.lastrowid
-            return cle
+            connection.commit()
+            return cursor.lastrowid
         except Error as e:
             print("\n<--------------------------------------->")
             print(f"Erreur lors de la création du paiement : {e}")
@@ -33,31 +33,10 @@ class DAOPaiement:
             if cursor:
                 cursor.close()
 
-    # Suppression d'un paiement dans la BDD
-    def delete_paiement(self, un_paiement):
-        sql = "DELETE FROM paiement WHERE idPaie = %s"
-        valeurs = (un_paiement.get_idPaie(),)
-        try:
-            connection = DAOSession.get_connexion()
-            cursor = connection.cursor()
-            cursor.execute(sql, valeurs)
-            return True
-        except Error as e:
-            print("\n<--------------------------------------->")
-            print(f"Erreur lors de la suppression du paiement : {e}")
-            print(sql)
-            print(valeurs)
-            print("rollback")
-            connection.rollback()
-            return False
-        finally:
-            if cursor:
-                cursor.close()
-
     # Recherche d'un paiement par son ID
-    def find_paiement(self, idPaie):
+    def find_paiement(self, id_paie):
         sql = "SELECT * FROM paiement WHERE idPaie = %s"
-        valeurs = (idPaie,)
+        valeurs = (id_paie,)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)
@@ -85,10 +64,33 @@ class DAOPaiement:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
             cursor.execute(sql, valeurs)
+            connection.commit()
             return True
         except Error as e:
             print("\n<--------------------------------------->")
             print(f"Erreur lors de la mise à jour de paiement : {e}")
+            print(sql)
+            print(valeurs)
+            print("rollback")
+            connection.rollback()
+            return False
+        finally:
+            if cursor:
+                cursor.close()
+
+    # Suppression d'un paiement dans la BDD
+    def delete_paiement(self, id_paie):
+        sql = "DELETE FROM paiement WHERE idPaie = %s"
+        valeurs = (id_paie.get_idPaie(),)
+        try:
+            connection = DAOSession.get_connexion()
+            cursor = connection.cursor()
+            cursor.execute(sql, valeurs)
+            connection.commit()
+            return True
+        except Error as e:
+            print("\n<--------------------------------------->")
+            print(f"Erreur lors de la suppression du paiement : {e}")
             print(sql)
             print(valeurs)
             print("rollback")
@@ -114,7 +116,7 @@ class DAOPaiement:
             valeurs.append(critere_date)
 
         if len(valeurs) == 0:
-            sql = "SELECT * FROM paiement"  # Si aucun critère n'est fourni, on sélectionne tous les paiements
+            sql = "SELECT * FROM paiement" 
 
         try:
             connection = DAOSession.get_connexion()
@@ -133,7 +135,8 @@ class DAOPaiement:
                 cursor.close()
         return les_paiements
 
-    def select_paiement(self, critere_facture=None, critere_date=None):
+    # Rechercher tous les paiements
+    def select_paiements(self):
         les_paiements = []
         sql = "SELECT * FROM paiement "
    
@@ -155,5 +158,14 @@ class DAOPaiement:
     
     # Méthode pour transfromer une ligne en un objet Paiement
     def set_all_values(self, rs):
-        un_paiement = Paiement(rs["idPaie"], rs["date"], rs["montant"], rs["idFact"])
-        return un_paiement
+        try:
+            un_paiement = Paiement(
+                rs["idPaie"], 
+                rs["date"], 
+                rs["montant"], 
+                rs["idFact"]
+                )
+            return un_paiement
+        except KeyError as e:
+            print(f"Erreur lors de la récupération des données : {e}")
+            return None

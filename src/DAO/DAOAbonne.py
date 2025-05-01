@@ -49,7 +49,7 @@ class DAOAbonne:
             if cursor:
                 cursor.close()
 
-    # Recherche d'abonnés en utilisant des critères
+    # Recherche des abonnés
     def select_abonnes(self):
         sql = "SELECT * FROM abonne"
         try:
@@ -84,7 +84,6 @@ class DAOAbonne:
     
     # Méthode pour transformer une ligne de résultats en un objet Abonne
     def set_all_values(self, rs):
-        from entites.personne import Abonne
         try:
             abonne = Abonne(
                 rs["carteAbo"], 

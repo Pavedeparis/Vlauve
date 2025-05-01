@@ -13,13 +13,9 @@ class DAOStation:
         return DAOStation.unique_instance
 
     # Insertion d'une station dans la base de données
-    def insert_station(self, une_station):
+    def insert_station(self, nouv_station):
         sql = "INSERT INTO station (nom, gps, nom_rue, num_rue, place_elec, place_non_elec, numRes) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-        valeurs = (
-            une_station.get_nom(), une_station.get_gps(), une_station.get_nom_rue(),
-            une_station.get_num_rue(), une_station.get_place_elec(), une_station.get_place_non_elec(),
-            une_station.get_reseau().get_numRes()  # très important !!
-        )
+        valeurs = (nouv_station.get_nom(), nouv_station.get_gps(), nouv_station.get_nom_rue(), nouv_station.get_num_rue(), nouv_station.get_place_elec(), nouv_station.get_place_non_elec(), nouv_station.get_reseau().get_numRes())
 
         try:
             connection = DAOSession.get_connexion()
@@ -36,30 +32,11 @@ class DAOStation:
             if cursor:
                 cursor.close()
 
-    # Suppression d'une station
-    def delete_station(self, une_station):
-        sql = "DELETE FROM station WHERE numStation = %s"
-        valeurs = (une_station.get_numStation(),)
-        try:
-            connection = DAOSession.get_connexion()
-            cursor = connection.cursor()
-            cursor.execute(sql, valeurs)
-            connection.commit()
-            return True
-        except Error as e:
-            print("\n<--------------------------------------->")
-            print(f"Erreur lors de la suppression de la station : {e}")
-            connection.rollback()
-            return False
-        finally:
-            if cursor:
-                cursor.close()
-
     # Recherche d'une station par son ID
-    def find_station(self, numStation):
+    def find_station(self, id_stat):
         sql = "SELECT * FROM station WHERE numStation = %s"
-        valeurs = (numStation,)
-        cursor = None  # <-- ajout ici
+        valeurs = (id_stat,)
+        cursor = None # ajout car bug sinon 
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)
@@ -77,14 +54,9 @@ class DAOStation:
             if cursor:
                 cursor.close()
 
-
     # Mise à jour d'une station
     def update_station(self, une_station):
-        sql = """
-        UPDATE station 
-        SET nom = %s, gps = %s, nom_rue = %s, num_rue = %s, place_elec = %s, place_non_elec = %s, numRes = %s 
-        WHERE numStation = %s
-        """
+        sql = "UPDATE station SET nom = %s, gps = %s, nom_rue = %s, num_rue = %s, place_elec = %s, place_non_elec = %s, numRes = %s WHERE numStation = %s"
         valeurs = (
             une_station.get_nom(),
             une_station.get_gps(),
@@ -104,6 +76,25 @@ class DAOStation:
         except Error as e:
             print("\n<--------------------------------------->")
             print(f"Erreur lors de la mise à jour de la station : {e}")
+            connection.rollback()
+            return False
+        finally:
+            if cursor:
+                cursor.close()
+
+    # Suppression d'une station
+    def delete_station(self, id_stat):
+        sql = "DELETE FROM station WHERE numStation = %s"
+        valeurs = (id_stat.get_numStation(),)
+        try:
+            connection = DAOSession.get_connexion()
+            cursor = connection.cursor()
+            cursor.execute(sql, valeurs)
+            connection.commit()
+            return True
+        except Error as e:
+            print("\n<--------------------------------------->")
+            print(f"Erreur lors de la suppression de la station : {e}")
             connection.rollback()
             return False
         finally:
@@ -133,23 +124,19 @@ class DAOStation:
     # Transformer une ligne SQL en objet Station
     def set_all_values(self, rs):
         from entites.reseau import Reseau
-
-        reseau = Reseau(
-            rs["numRes"],
-            None,  # on ne connait pas ici les autres attributs
-            None,
-            None
-        )
-
-        une_station = Station(
-            rs["numStation"],
-            rs["nom"],
-            rs["gps"],
-            rs["nom_rue"],
-            rs["num_rue"],
-            rs["place_elec"],
-            rs["place_non_elec"],
-            reseau
-        )
-
-        return une_station
+        try:
+            reseau = Reseau(rs["numRes"], None, None, None)
+            une_station = Station(
+                rs["numStation"],
+                rs["nom"],
+                rs["gps"],
+                rs["nom_rue"],
+                rs["num_rue"],
+                rs["place_elec"],
+                rs["place_non_elec"],
+                reseau
+            )
+            return une_station
+        except KeyError as e:
+            print(f"Erreur lors de la récupération des données : {e}")
+            return None

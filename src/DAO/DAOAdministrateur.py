@@ -12,9 +12,9 @@ class DAOAdministrateur:
         return DAOAdministrateur.unique_instance
 
     # Insertion d'un administrateur dans la BDD
-    def insert_administrateur(self, un_admin):
+    def insert_administrateur(self, nouv_admin):
         sql = "INSERT INTO administrateur (email, mdp, nom, prenom, num_tel) VALUES (%s, %s, %s, %s, %s)"
-        valeurs = (un_admin.get_email(), un_admin.get_mdp(), un_admin.get_nom(), un_admin.get_prenom(), un_admin.get_num_tel())
+        valeurs = (nouv_admin.get_email(), nouv_admin.get_mdp(), nouv_admin.get_nom(), nouv_admin.get_prenom(), nouv_admin.get_num_tel())
         cursor = None
         try:
             connection = DAOSession.get_connexion()
@@ -103,12 +103,17 @@ class DAOAdministrateur:
         return les_admins
 
     # Méthode pour transformer une ligne de résultats (rs) en un objet Administrateur
-    def set_all_values(self, row):
-        return Administrateur(
-            id_admin=row["id_admin"],
-            email=row["email"],
-            mdp=row["mdp"],
-            nom=row["nom"],
-            prenom=row["prenom"],
-            num_tel=row["num_tel"]
-        )
+    def set_all_values(self, rs):
+        try:
+            admin = Administrateur(
+                id_admin=rs["id_admin"],
+                email=rs["email"],
+                mdp=rs["mdp"],
+                nom=rs["nom"],
+                prenom=rs["prenom"],
+                num_tel=rs["num_tel"]
+            )
+            return admin
+        except KeyError as e:
+            print(f"Erreur lors de la récupération des données : {e}")
+            return None

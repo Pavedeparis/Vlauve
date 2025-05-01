@@ -11,16 +11,15 @@ class DAOVille:
         return DAOVille.unique_instance
 
     # Insertion d'une ville dans la BDD
-    def insert_ville(self, une_ville):
+    def insert_ville(self, nouv_ville):
         sql = "INSERT INTO ville (idVille, nom, code_postal, tarif_min_gratuite, tarif_demi_occ, tarif_demi_ann) VALUES (%s, %s, %s, %s, %s, %s)"
-        valeurs = (une_ville.get_idVille(), une_ville.get_nom(), une_ville.get_code_postal(), une_ville.get_tarif_min_gratuite(), une_ville.get_tarif_demi_occ(), une_ville.get_tarif_demi_ann())
+        valeurs = (nouv_ville.get_idVille(), nouv_ville.get_nom(), nouv_ville.get_code_postal(), nouv_ville.get_tarif_min_gratuite(), nouv_ville.get_tarif_demi_occ(), nouv_ville.get_tarif_demi_ann())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
             cursor.execute(sql, valeurs)
             connection.commit()
-            cle = cursor.lastrowid
-            return cle
+            return cursor.lastrowid
         except Error as e:
             print("\n<--------------------------------------->")
             print(f"Erreur lors de la création de la ville : {e}")
@@ -33,31 +32,10 @@ class DAOVille:
             if cursor:
                 cursor.close()
 
-    # Suppression d'une ville de la BDD
-    def delete_ville(self, une_ville):
-        sql = "DELETE FROM ville WHERE idVille = %s"
-        valeurs = (une_ville.get_idVille(),)
-        try:
-            connection = DAOSession.get_connexion()
-            cursor = connection.cursor()
-            cursor.execute(sql, valeurs)
-            return True
-        except Error as e:
-            print("\n<--------------------------------------->")
-            print(f"Erreur lors de la suppression de la ville : {e}")
-            print(sql)
-            print(valeurs)
-            print("rollback")
-            connection.rollback()
-            return False
-        finally:
-            if cursor:
-                cursor.close()
-
     # Recherche d'une ville par son ID
-    def find_ville(self, idVille):
+    def find_ville(self, id_ville):
         sql = "SELECT * FROM ville WHERE idVille = %s"
-        valeurs = (idVille,)
+        valeurs = (id_ville,)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)
@@ -85,10 +63,33 @@ class DAOVille:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
             cursor.execute(sql, valeurs)
+            connection.commit()
             return True
         except Error as e:
             print("\n<--------------------------------------->")
             print(f"Erreur lors de la mise à jour de la ville : {e}")
+            print(sql)
+            print(valeurs)
+            print("rollback")
+            connection.rollback()
+            return False
+        finally:
+            if cursor:
+                cursor.close()
+
+    # Suppression d'une ville de la BDD
+    def delete_ville(self, id_ville):
+        sql = "DELETE FROM ville WHERE idVille = %s"
+        valeurs = (id_ville.get_idVille(),)
+        try:
+            connection = DAOSession.get_connexion()
+            cursor = connection.cursor()
+            cursor.execute(sql, valeurs)
+            connection.commit()
+            return True
+        except Error as e:
+            print("\n<--------------------------------------->")
+            print(f"Erreur lors de la suppression de la ville : {e}")
             print(sql)
             print(valeurs)
             print("rollback")
@@ -141,5 +142,16 @@ class DAOVille:
     # Méthode pour transformer une ligne de résultats en un objet Ville
     def set_all_values(self, rs):
         from entites.ville import Ville
-        une_ville = Ville(rs["idVille"], rs["nom"], rs["code_postal"], rs["tarif_min_gratuite"], rs["tarif_demi_occ"], rs["tarif_demi_ann"])
-        return une_ville
+        try:
+            une_ville = Ville(
+                rs["idVille"], 
+                rs["nom"], 
+                rs["code_postal"], 
+                rs["tarif_min_gratuite"], 
+                rs["tarif_demi_occ"], 
+                rs["tarif_demi_ann"]
+                )
+            return une_ville
+        except KeyError as e:
+            print(f"Erreur lors de la récupération des données : {e}")
+            return None

@@ -12,17 +12,15 @@ class DAOAbonnement:
         return DAOAbonnement.unique_instance
 
     # Insertion d'un abonnement dans la BDD
-    def insert_abonnement(self, un_abonnement):
+    def insert_abonnement(self, nouv_abonnement):
         sql = "INSERT INTO abonnement (type_abo, sous_type) VALUES (%s, %s)"
-        valeurs = (un_abonnement.get_type_abo(), un_abonnement.get_sous_type())
-
+        valeurs = (nouv_abonnement.get_type_abo(), nouv_abonnement.get_sous_type())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
             cursor.execute(sql, valeurs)
             connection.commit()
-            cle = cursor.lastrowid
-            return cle
+            return cursor.lastrowid
         except Error as e:
             print("\n<--------------------------------------->")
             print(f"Erreur lors de la création d'un abonnement : {e}")
@@ -35,32 +33,10 @@ class DAOAbonnement:
             if cursor:
                 cursor.close()
 
-    # Suppression d'un abonnement dans la BDD
-    def delete_abonnement(self, idAbo):
-        sql = "DELETE FROM abonnement WHERE idAbo = %s"
-        valeurs = (idAbo,)
-        try:
-            connection = DAOSession.get_connexion()
-            cursor = connection.cursor()
-            cursor.execute(sql, valeurs)
-            connection.commit()
-            return True
-        except Error as e:
-            print("\n<--------------------------------------->")
-            print(f"Erreur lors de la suppression de l'abonnement : {e}")
-            print(sql)
-            print(valeurs)
-            print("rollback")
-            connection.rollback()
-            return False
-        finally:
-            if cursor:
-                cursor.close()
-
     # Recherche d'un abonnement par ID
-    def find_abonnement(self, idAbo):
+    def find_abonnement(self, id_abonnement):
         sql = "SELECT * FROM abonnement WHERE idAbo = %s"
-        valeurs = (idAbo,)
+        valeurs = (id_abonnement,)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)
@@ -103,7 +79,29 @@ class DAOAbonnement:
             if cursor:
                 cursor.close()
 
-    # recherche d'abonnements avec critères
+    # Suppression d'un abonnement dans la BDD
+    def delete_abonnement(self, id_abonnement):
+        sql = "DELETE FROM abonnement WHERE idAbo = %s"
+        valeurs = (id_abonnement,)
+        try:
+            connection = DAOSession.get_connexion()
+            cursor = connection.cursor()
+            cursor.execute(sql, valeurs)
+            connection.commit()
+            return True
+        except Error as e:
+            print("\n<--------------------------------------->")
+            print(f"Erreur lors de la suppression de l'abonnement : {e}")
+            print(sql)
+            print(valeurs)
+            print("rollback")
+            connection.rollback()
+            return False
+        finally:
+            if cursor:
+                cursor.close()
+
+    # Recherche les abonnements
     def select_abonnement(self):
         les_abonnements = []
         sql = "SELECT * FROM abonnement "
@@ -154,7 +152,15 @@ class DAOAbonnement:
             if cursor:
                 cursor.close()
 
-
     # Méthode pour transformer une ligne de résultats en un objet Abonnement
     def set_all_values(self, rs):
-        return Abonnement(rs["idAbo"], rs["type_abo"], rs["sous_type"])
+        try:
+            abonnement = Abonnement(
+                rs["idAbo"], 
+                rs["type_abo"], 
+                rs["sous_type"]
+                )
+            return abonnement
+        except KeyError as e:
+            print(f"Erreur lors de la récupération des données : {e}")
+            return None

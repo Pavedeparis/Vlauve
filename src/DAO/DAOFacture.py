@@ -12,15 +12,15 @@ class DAOFacture:
         return DAOFacture.unique_instance
 
     # Insertion d'une facture dans la BDD
-    def insert_facture(self, une_facture):
+    def insert_facture(self, nouv_facture):
         sql = "INSERT INTO facture (date, montant, carteAbo) VALUES (%s, %s, %s, %s)"
-        valeurs = (une_facture.get_date(), une_facture.get_montant(), une_facture.get_carteAbo())
+        valeurs = (nouv_facture.get_date(), nouv_facture.get_montant(), nouv_facture.get_carteAbo())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
             cursor.execute(sql, valeurs)
-            cle = cursor.lastrowid
-            return cle
+            connection.commit()
+            return cursor.lastrowid
         except Error as e:
             print("\n<--------------------------------------->")
             print(f"Erreur lors de la création de la facture : {e}")
@@ -32,32 +32,11 @@ class DAOFacture:
         finally:
             if cursor:
                 cursor.close()
-                
-    # Suppression d'une facture dans la BDD
-    def delete_facture(self, une_facture):
-        sql = "DELETE FROM facture WHERE idFact = %s"
-        valeurs = (une_facture.get_idFact(),)
-        try:
-            connection = DAOSession.get_connexion()
-            cursor = connection.cursor()
-            cursor.execute(sql, valeurs)
-            return True
-        except Error as e:
-            print("\n<--------------------------------------->")
-            print(f"Erreur lors de la suppression de la facture : {e}")
-            print(sql)
-            print(valeurs)
-            print("rollback")
-            connection.rollback()
-            return False
-        finally:
-            if cursor:
-                cursor.close()
 
     # Recherche d'une facture par son ID
-    def find_facture(self, idFact):
+    def find_facture(self, id_fact):
         sql = "SELECT * FROM facture WHERE idFact = %s"
-        valeurs = (idFact,)
+        valeurs = (id_fact,)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)
@@ -85,10 +64,33 @@ class DAOFacture:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
             cursor.execute(sql, valeurs)
+            connection.commit()
             return True
         except Error as e:
             print("\n<--------------------------------------->")
             print(f"Erreur lors de la mise à jour de la facture : {e}")
+            print(sql)
+            print(valeurs)
+            print("rollback")
+            connection.rollback()
+            return False
+        finally:
+            if cursor:
+                cursor.close()
+
+    # Suppression d'une facture dans la BDD
+    def delete_facture(self, id_fact):
+        sql = "DELETE FROM facture WHERE idFact = %s"
+        valeurs = (id_fact.get_idFact(),)
+        try:
+            connection = DAOSession.get_connexion()
+            cursor = connection.cursor()
+            cursor.execute(sql, valeurs)
+            connection.commit()
+            return True
+        except Error as e:
+            print("\n<--------------------------------------->")
+            print(f"Erreur lors de la suppression de la facture : {e}")
             print(sql)
             print(valeurs)
             print("rollback")
@@ -121,5 +123,14 @@ class DAOFacture:
 
     # Méthode pour transformer chaque ligne de résultat en un objet Facture
     def set_all_values(self, rs):
-        une_facture = Facture(rs["idFact"], rs["date"], rs["montant"], rs["carteAbo"])
-        return une_facture
+        try:
+            une_facture = Facture(
+                rs["idFact"], 
+                rs["date"], 
+                rs["montant"], 
+                rs["carteAbo"]
+                )
+            return une_facture
+        except KeyError as e:
+            print(f"Erreur lors de la récupération des données : {e}")
+            return None

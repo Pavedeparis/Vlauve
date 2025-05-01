@@ -11,15 +11,15 @@ class DAOReseau:
         return DAOReseau.unique_instance
 
     # Insertion d'un réseau dans la BDD
-    def insert_reseau(self, un_reseau):
+    def insert_reseau(self, nouv_res):
         sql = "INSERT INTO reseau (numRes, nom, annee, idVille) VALUES (%s, %s, %s, %s)"
-        valeurs = (un_reseau.get_numRes(), un_reseau.get_nom(), un_reseau.get_annee(), un_reseau.get_ville().get_idVille())
+        valeurs = (nouv_res.get_numRes(), nouv_res.get_nom(), nouv_res.get_annee(), nouv_res.get_ville().get_idVille())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
             cursor.execute(sql, valeurs)
-            cle = cursor.lastrowid
-            return cle
+            connection.commit()
+            return cursor.lastrowid
         except Error as e:
             print("\n<--------------------------------------->")
             print(f"Erreur lors de la création du réseau : {e}")
@@ -32,31 +32,10 @@ class DAOReseau:
             if cursor:
                 cursor.close()
 
-    # Suppression d'un réseau de la base de données
-    def delete_reseau(self, un_reseau):
-        sql = "DELETE FROM reseau WHERE numRes = %s"
-        valeurs = (un_reseau.get_numRes(),)
-        try:
-            connection = DAOSession.get_connexion()
-            cursor = connection.cursor()
-            cursor.execute(sql, valeurs)
-            return True
-        except Error as e:
-            print("\n<--------------------------------------->")
-            print(f"Erreur lors de la suppression du réseau : {e}")
-            print(sql)
-            print(valeurs)
-            print("rollback")
-            connection.rollback()
-            return False
-        finally:
-            if cursor:
-                cursor.close()
-
     # Recherche d'un réseau par son ID
-    def find_reseau(self, numRes):
+    def find_reseau(self, id_res):
         sql = "SELECT * FROM reseau WHERE numRes = %s"
-        valeurs = (numRes,)
+        valeurs = (id_res,)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)
@@ -84,10 +63,33 @@ class DAOReseau:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
             cursor.execute(sql, valeurs)
+            connection.commit()
             return True
         except Error as e:
             print("\n<--------------------------------------->")
             print(f"Erreur lors de la mise à jour du réseau : {e}")
+            print(sql)
+            print(valeurs)
+            print("rollback")
+            connection.rollback()
+            return False
+        finally:
+            if cursor:
+                cursor.close()
+
+    # Suppression d'un réseau de la base de données
+    def delete_reseau(self, id_res):
+        sql = "DELETE FROM reseau WHERE numRes = %s"
+        valeurs = (id_res.get_numRes(),)
+        try:
+            connection = DAOSession.get_connexion()
+            cursor = connection.cursor()
+            cursor.execute(sql, valeurs)
+            connection.commit()
+            return True
+        except Error as e:
+            print("\n<--------------------------------------->")
+            print(f"Erreur lors de la suppression du réseau : {e}")
             print(sql)
             print(valeurs)
             print("rollback")
@@ -145,6 +147,22 @@ class DAOReseau:
     def set_all_values(self, rs):
         from entites.reseau import Reseau
         from entites.ville import Ville
-        idVille = Ville(rs["idVille"], rs["nom_ville"], rs["codepostal"], rs["px_min_gratuites"], rs["px_abo_annuel"], rs["px_abo_occasionnel"])
-        un_reseau = Reseau(rs["numRes"], rs["nom"], rs["annee"], idVille)
-        return un_reseau
+        try: 
+            idVille = Ville(
+                rs["idVille"], 
+                rs["nom_ville"], 
+                rs["codepostal"], 
+                rs["px_min_gratuites"], 
+                rs["px_abo_annuel"], 
+                rs["px_abo_occasionnel"]
+                )
+            un_reseau = Reseau(
+                rs["numRes"], 
+                rs["nom"], 
+                rs["annee"], 
+                idVille
+                )
+            return un_reseau
+        except KeyError as e:
+            print(f"Erreur lors de la récupération des données : {e}")
+            return None

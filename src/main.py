@@ -3,6 +3,7 @@ from interfaces.app_controller import AppController
 from DAO.DAOAbonne import DAOAbonne
 from DAO.DAOAdministrateur import DAOAdministrateur
 
+# Méthode permettant de centrer la fenêtre sur l'écran
 def centrer_fenetre(fenetre, largeur, hauteur):
     # Obtenir la taille de l'écran
     ecran_largeur = fenetre.winfo_screenwidth()
@@ -15,13 +16,14 @@ def centrer_fenetre(fenetre, largeur, hauteur):
     # Appliquer la taille et la position
     fenetre.geometry(f"{largeur}x{hauteur}+{x}+{y}")
 
+
 if __name__ == "__main__":
     # Récupérer les utilisateurs depuis la base de données
     abonnés = DAOAbonne.get_instance().select_abonnes()
     administrateurs = DAOAdministrateur.get_instance().select_administrateurs()
     utilisateurs = abonnés + administrateurs
 
-    # Création de la fenêtre principale
+    # Créer la fenêtre principale
     root = tk.Tk()
     root.title("VLauve")
     centrer_fenetre(root, 600, 600)

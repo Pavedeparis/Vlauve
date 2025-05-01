@@ -12,16 +12,15 @@ class DAOVelo:
         return DAOVelo.unique_instance
 
     # Insertion d'un vélo dans la BDD
-    def insert_velo(self, un_velo):
+    def insert_velo(self, nouv_velo):
         sql = "INSERT INTO velo (refVelo, electrique, batterie, statut, km_total, date_circu, numStation) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-        valeurs = (un_velo.get_refVelo(), un_velo.get_electrique(), un_velo.get_batterie(), un_velo.get_statut().value, un_velo.get_km_total(), un_velo.get_date_circu(), un_velo.get_numStation())
+        valeurs = (nouv_velo.get_refVelo(), nouv_velo.get_electrique(), nouv_velo.get_batterie(), nouv_velo.get_statut().value, nouv_velo.get_km_total(), nouv_velo.get_date_circu(), nouv_velo.get_numStation())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
             cursor.execute(sql, valeurs)
             connection.commit()
-            cle = cursor.lastrowid
-            return cle
+            return cursor.lastrowid
         except Error as e:
             print("\n<--------------------------------------->")
             print(f"Erreur lors de la création du vélo : {e}")
@@ -34,31 +33,10 @@ class DAOVelo:
             if cursor:
                 cursor.close()
 
-    # Suppression d'un vélo dans la BDD
-    def delete_velo(self, un_velo):
-        sql = "DELETE FROM velo WHERE refVelo = %s"
-        valeurs = (un_velo.get_refVelo(),)
-        try:
-            connection = DAOSession.get_connexion()
-            cursor = connection.cursor()
-            cursor.execute(sql, valeurs)
-            return True
-        except Error as e:
-            print("\n<--------------------------------------->")
-            print(f"Erreur lors de la suppression du vélo : {e}")
-            print(sql)
-            print(valeurs)
-            print("rollback")
-            connection.rollback()
-            return False
-        finally:
-            if cursor:
-                cursor.close()
-
     # Recherche d'un vélo par sa référence
-    def find_velo(self, refVelo):
+    def find_velo(self, id_velo):
         sql = "SELECT * FROM velo WHERE refVelo = %s"
-        valeurs = (refVelo,)
+        valeurs = (id_velo,)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)
@@ -75,14 +53,13 @@ class DAOVelo:
             if cursor:
                 cursor.close()
 
-    
-    def find_velos_by_station(self, numStation):
+    def find_velos_by_station(self, id_station):
         from DAO.DAOStation import DAOStation 
         connection = DAOSession.get_connexion()
         cursor = connection.cursor(dictionary=True)
         sql = "SELECT * FROM velo WHERE numStation = %s"
-        cursor.execute(sql, (numStation,))
-        station = DAOStation.get_instance().find_station(numStation)
+        cursor.execute(sql, (id_station,))
+        station = DAOStation.get_instance().find_station(id_station)
 
         velos = []
         for row in cursor.fetchall():
@@ -114,6 +91,28 @@ class DAOVelo:
         except Error as e:
             print("\n<--------------------------------------->")
             print(f"Erreur lors de la mise à jour du vélo : {e}")
+            print(sql)
+            print(valeurs)
+            print("rollback")
+            connection.rollback()
+            return False
+        finally:
+            if cursor:
+                cursor.close()
+
+    # Suppression d'un vélo dans la BDD
+    def delete_velo(self, id_velo):
+        sql = "DELETE FROM velo WHERE refVelo = %s"
+        valeurs = (id_velo.get_refVelo(),)
+        try:
+            connection = DAOSession.get_connexion()
+            cursor = connection.cursor()
+            cursor.execute(sql, valeurs)
+            connection.commit()
+            return True
+        except Error as e:
+            print("\n<--------------------------------------->")
+            print(f"Erreur lors de la suppression du vélo : {e}")
             print(sql)
             print(valeurs)
             print("rollback")
@@ -178,24 +177,27 @@ class DAOVelo:
 
     # Méthode pour transformer une ligne de résultats en un objet Velo
     def set_all_values(self, rs):
-        from entites.velo import Velo
-        from DAO.DAOStation import DAOStation
-        station = DAOStation.get_instance().find_station(rs["numStation"]) 
-        un_velo = Velo(
-            refVelo=rs["refVelo"],
-            electrique=bool(rs["electrique"]),
-            batterie=rs["batterie"],
-            statut=StatutVelo(rs["statut"]),
-            date_circu=rs["date_circu"],
-            km_total=rs["km_total"],
-            station=station
-        )
+        try:
+            from DAO.DAOStation import DAOStation
+            station = DAOStation.get_instance().find_station(rs["numStation"]) 
+            un_velo = Velo(
+                refVelo=rs["refVelo"],
+                electrique=bool(rs["electrique"]),
+                batterie=rs["batterie"],
+                statut=StatutVelo(rs["statut"]),
+                date_circu=rs["date_circu"],
+                km_total=rs["km_total"],
+                station=station
+            )
 
-        return un_velo
+            return un_velo
+        except KeyError as e:
+            print(f"Erreur lors de la récupération des données : {e}")
+            return None
 
-    def verifier_disponibilite(self, refVelo):
+    def verifier_disponibilite(self, id_velo):
         sql = "SELECT statut FROM velo WHERE refVelo = %s"
-        valeurs = (refVelo,)
+        valeurs = (id_velo,)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)

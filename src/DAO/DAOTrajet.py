@@ -15,29 +15,29 @@ class DAOTrajet:
         return DAOTrajet.unique_instance
 
     # Insertion d'un trajet dans la BDD
-    def insert_trajet(self, trajet):
+    def insert_trajet(self, nouv_trajet):
         from datetime import datetime
         sql = "INSERT INTO trajet (station_depart, station_arrivee, nbr_km, dateheure_debut, dateheure_fin, carteAbo, refVelo) VALUES (%s, %s, %s, %s, %s, %s, %s)"        
 
-        # Vérifie si ce sont des strings, les convertir
-        if isinstance(trajet.get_dateheure_debut(), str):
-            date_debut = datetime.strptime(trajet.get_dateheure_debut(), "%Y-%m-%d %H:%M:%S")
+        # Vérification : si ce sont des strings -> les convertir (mis en place à cause de bugs)
+        if isinstance(nouv_trajet.get_dateheure_debut(), str):
+            date_debut = datetime.strptime(nouv_trajet.get_dateheure_debut(), "%Y-%m-%d %H:%M:%S")
         else:
-            date_debut = trajet.get_dateheure_debut()
+            date_debut = nouv_trajet.get_dateheure_debut()
 
-        if isinstance(trajet.get_dateheure_fin(), str):
-            date_fin = datetime.strptime(trajet.get_dateheure_fin(), "%Y-%m-%d %H:%M:%S")
+        if isinstance(nouv_trajet.get_dateheure_fin(), str):
+            date_fin = datetime.strptime(nouv_trajet.get_dateheure_fin(), "%Y-%m-%d %H:%M:%S")
         else:
-            date_fin = trajet.get_dateheure_fin()
+            date_fin = nouv_trajet.get_dateheure_fin()
         
         valeurs = (
-            trajet.get_station_depart().get_numStation(),
-            trajet.get_station_arrivee().get_numStation(),
-            trajet.get_nbr_km(),
+            nouv_trajet.get_station_depart().get_numStation(),
+            nouv_trajet.get_station_arrivee().get_numStation(),
+            nouv_trajet.get_nbr_km(),
             date_debut,
             date_fin,
-            trajet.get_abonne().get_carteAbo(),
-            trajet.get_refVelo()
+            nouv_trajet.get_abonne().get_carteAbo(),
+            nouv_trajet.get_refVelo()
         )
 
         try:
@@ -57,32 +57,11 @@ class DAOTrajet:
         finally:
             if cursor:
                 cursor.close()
-    
-    # Suppression d'un trajet dans la BDD
-    def delete_trajet(self, trajet):
-        sql = "DELETE FROM trajet WHERE refTrajet = %s"
-        valeurs = (trajet.get_refTrajet(),)
-        try:
-            connection = DAOSession.get_connexion()
-            cursor = connection.cursor()
-            cursor.execute(sql, valeurs)
-            return True
-        except Error as e:
-            print("\n<--------------------------------------->")
-            print(f"Erreur lors de la suppression du trajet : {e}")
-            print(sql)
-            print(valeurs)
-            print("rollback")
-            connection.rollback()
-            return False
-        finally:
-            if cursor:
-                cursor.close()
 
     # Recherche d'un trajet en particulier avec son refTrajet
-    def find_trajet(self, refTrajet):
+    def find_trajet(self, id_trajet):
         sql = "SELECT * FROM trajet WHERE refTrajet = %s"
-        valeurs = (refTrajet,)
+        valeurs = (id_trajet,)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)
@@ -106,8 +85,8 @@ class DAOTrajet:
     def update_trajet(self, un_trajet):
         sql = "UPDATE trajet SET station_depart = %s, station_arrivee = %s, nbr_km = %s, dateheure_debut = %s, dateheure_fin = %s, carteAbo = %s, refVelo = %s WHERE refTrajet = %s"
         valeurs = (
-            un_trajet.get_station_depart().get_numStation(),  # ou get_nom() si tu veux le nom
-            un_trajet.get_station_arrivee().get_numStation(),  # ou get_nom() si tu veux le nom
+            un_trajet.get_station_depart().get_numStation(),
+            un_trajet.get_station_arrivee().get_numStation(), 
             un_trajet.get_nbr_km(),
             un_trajet.get_dateheure_debut(),
             un_trajet.get_dateheure_fin(),
@@ -119,6 +98,7 @@ class DAOTrajet:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
             cursor.execute(sql, valeurs)
+            connection.commit()
             return True
         except Error as e:
             print("\n<--------------------------------------->")
@@ -132,7 +112,29 @@ class DAOTrajet:
             if cursor:
                 cursor.close()
 
-    # Recherche d'un trajet avec des critères
+    # Suppression d'un trajet dans la BDD
+    def delete_trajet(self, id_trajet):
+        sql = "DELETE FROM trajet WHERE refTrajet = %s"
+        valeurs = (id_trajet.get_refTrajet(),)
+        try:
+            connection = DAOSession.get_connexion()
+            cursor = connection.cursor()
+            cursor.execute(sql, valeurs)
+            connection.commit()
+            return True
+        except Error as e:
+            print("\n<--------------------------------------->")
+            print(f"Erreur lors de la suppression du trajet : {e}")
+            print(sql)
+            print(valeurs)
+            print("rollback")
+            connection.rollback()
+            return False
+        finally:
+            if cursor:
+                cursor.close()
+
+    # Recherche des trajets
     def select_trajet(self):
         les_trajets = []
         sql = "SELECT * FROM trajet"
@@ -153,18 +155,16 @@ class DAOTrajet:
                 cursor.close()
         return les_trajets
 
-    from DAO.DAOStation import DAOStation
-
+    # Méthode permettant de trouver les trajets effectué par un abonné grâce à son id
     def select_trajets_abonne(self, carteAbo):
         connection = DAOSession.get_connexion()
-        cursor = connection.cursor(dictionary=True)  # Utilisation du dictionnaire pour une gestion propre des résultats
+        cursor = connection.cursor(dictionary=True)  
         sql = "SELECT * FROM trajet WHERE carteAbo = %s"
         cursor.execute(sql, (carteAbo,))
         rows = cursor.fetchall()
 
         trajets = []
         for row in rows:
-            # Les indices sont maintenant des clés de dictionnaire, donc tu peux les appeler par leur nom
             station_depart = DAOStation.get_instance().find_station(row["station_depart"])
             station_arrivee = DAOStation.get_instance().find_station(row["station_arrivee"])
             velo = DAOVelo.get_instance().find_velo(row["refVelo"])
@@ -185,25 +185,25 @@ class DAOTrajet:
         cursor.close()
         return trajets
 
-
     # Méthode pour transformer une ligne en un objet Trajet
     def set_all_values(self, rs):
-        dao_velo = DAOVelo.get_instance()
-        dao_station = DAOStation.get_instance()
-        dao_abonne = DAOAbonne.get_instance()
+        try:
+            station_depart = DAOStation.get_instance().find_station(rs["station_depart"])
+            station_arrivee = DAOStation.get_instance().find_station(rs["station_arrivee"])
+            velo = DAOVelo.get_instance().find_velo(rs["refVelo"])
+            abonne = DAOAbonne.get_instance().find_abonne(rs["carteAbo"])
 
-        station_depart = dao_station.find_station(rs["station_depart"])
-        station_arrivee = dao_station.find_station(rs["station_arrivee"])
-        velo = dao_velo.find_velo(rs["refVelo"])
-        abonne = dao_abonne.find_abonne(rs["carteAbo"])
-
-        return Trajet(
-            rs["refTrajet"], 
-            station_depart, 
-            station_arrivee, 
-            rs["nbr_km"], 
-            rs["dateheure_debut"], 
-            rs["dateheure_fin"], 
-            abonne, 
-            velo
-        )
+            trajet = Trajet(
+                rs["refTrajet"], 
+                station_depart, 
+                station_arrivee, 
+                rs["nbr_km"], 
+                rs["dateheure_debut"], 
+                rs["dateheure_fin"], 
+                abonne, 
+                velo
+            )
+            return trajet
+        except KeyError as e:
+            print(f"Erreur lors de la récupération des données : {e}")
+            return None

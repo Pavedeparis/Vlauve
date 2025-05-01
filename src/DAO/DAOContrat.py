@@ -12,12 +12,9 @@ class DAOContrat:
         return DAOContrat.unique_instance
 
     # Insertion d'un contrat
-    def insert_contrat(self, un_contrat):
+    def insert_contrat(self, nouv_contrat):
         sql = "INSERT INTO contrat (idAbo, carteAbo, date_debut, date_fin, montant, garantie, carte_identite) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-        valeurs = (
-            un_contrat.idAbo, un_contrat.carteAbo, un_contrat.date_debut, un_contrat.date_fin,
-            un_contrat.montant, un_contrat.garantie, un_contrat.carte_identite
-        )
+        valeurs = (nouv_contrat.idAbo, nouv_contrat.carteAbo, nouv_contrat.date_debut, nouv_contrat.date_fin, nouv_contrat.montant, nouv_contrat.garantie, nouv_contrat.carte_identite)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -32,32 +29,10 @@ class DAOContrat:
             if cursor:
                 cursor.close()
 
-    
-    # Suppression d'un contrat
-    def delete_contrat(self, un_contrat):
-        sql = "DELETE FROM contrat WHERE idCont = %s"
-        valeurs = (un_contrat.get_idCont(),)
-        try:
-            connection = DAOSession.get_connexion()
-            cursor = connection.cursor()
-            cursor.execute(sql, valeurs)
-            return True
-        except Error as e:
-            print("\n<--------------------------------------->")
-            print(f"Erreur lors de la suppression d'un contrat : {e}")
-            print(sql)
-            print(valeurs)
-            print("rollback")
-            connection.rollback()
-            return False
-        finally:
-            if cursor:
-                cursor.close()
-
     # Trouver un contrat par son ID
-    def find_contrat(self, idCont):
+    def find_contrat(self, id_contrat):
         sql = "SELECT * FROM contrat WHERE idCont = %s"
-        valeurs = (idCont,)
+        valeurs = (id_contrat,)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)
@@ -87,6 +62,7 @@ class DAOContrat:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
             cursor.execute(sql, valeurs)
+            connection.commit()
             return True
         except Error as e:
             print("\n<--------------------------------------->")
@@ -100,10 +76,32 @@ class DAOContrat:
             if cursor:
                 cursor.close()
 
+    # Suppression d'un contrat
+    def delete_contrat(self, id_contrat):
+        sql = "DELETE FROM contrat WHERE idCont = %s"
+        valeurs = (id_contrat.get_idCont(),)
+        try:
+            connection = DAOSession.get_connexion()
+            cursor = connection.cursor()
+            cursor.execute(sql, valeurs)
+            connection.commit()
+            return True
+        except Error as e:
+            print("\n<--------------------------------------->")
+            print(f"Erreur lors de la suppression d'un contrat : {e}")
+            print(sql)
+            print(valeurs)
+            print("rollback")
+            connection.rollback()
+            return False
+        finally:
+            if cursor:
+                cursor.close()
+
     # Rechercher les contrats
     def select_contrat(self):
         les_contrats = []
-        sql = "SELECT * FROM contrat WHERE "
+        sql = "SELECT * FROM contrat "
 
         try:
             connection = DAOSession.get_connexion()
@@ -123,14 +121,18 @@ class DAOContrat:
 
     # Méthode pour transformer chaque ligne en un objet Contrat
     def set_all_values(self, rs):
-        un_contrat = Contrat(
-            rs["idCont"], 
-            rs["idAbo"], 
-            rs["carteAbo"], 
-            rs["date_debut"], 
-            rs["date_fin"], 
-            rs["montant"], 
-            rs["garantie"], 
-            rs["carte_identite"]
-            )
-        return un_contrat
+        try:
+            un_contrat = Contrat(
+                rs["idCont"], 
+                rs["idAbo"], 
+                rs["carteAbo"], 
+                rs["date_debut"], 
+                rs["date_fin"], 
+                rs["montant"], 
+                rs["garantie"], 
+                rs["carte_identite"]
+                )
+            return un_contrat
+        except KeyError as e:
+            print(f"Erreur lors de la récupération des données : {e}")
+            return None
