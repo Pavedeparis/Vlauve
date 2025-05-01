@@ -12,9 +12,9 @@ class DAOAbonne:
         return DAOAbonne.unique_instance
 
     # Insertion d'un abonné dans la BDD
-    def insert_abonne(self, un_abonne):
+    def insert_abonne(self, nouv_abonne):
         sql = "INSERT INTO abonne (email, mdp, nom, prenom, num_tel, num_rue, nom_rue, num_cb) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-        valeurs = (un_abonne.get_email(), un_abonne.get_mdp(), un_abonne.get_nom(), un_abonne.get_prenom(), un_abonne.get_num_tel(), un_abonne.get_num_rue(), un_abonne.get_nom_rue(), un_abonne.get_num_cb())
+        valeurs = (nouv_abonne.get_email(), nouv_abonne.get_mdp(), nouv_abonne.get_nom(), nouv_abonne.get_prenom(), nouv_abonne.get_num_tel(), nouv_abonne.get_num_rue(), nouv_abonne.get_nom_rue(), nouv_abonne.get_num_cb())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
@@ -49,26 +49,6 @@ class DAOAbonne:
             if cursor:
                 cursor.close()
 
-    # Méthode pour transformer une ligne de résultats en un objet Abonne
-    def set_all_values(self, rs):
-        from entites.personne import Abonne
-        try:
-            abonne = Abonne(
-                rs["carteAbo"], 
-                rs["email"], 
-                rs["mdp"], 
-                rs["nom"], 
-                rs["prenom"],
-                rs["num_tel"], 
-                rs["num_rue"], 
-                rs["nom_rue"], 
-                rs["num_cb"]
-                )
-            return abonne
-        except KeyError as e:
-            print(f"Erreur lors de la récupération des données : {e}")
-            return None
-
     # Recherche d'abonnés en utilisant des critères
     def select_abonnes(self):
         sql = "SELECT * FROM abonne"
@@ -101,3 +81,23 @@ class DAOAbonne:
         finally:
             if cursor:
                 cursor.close()
+    
+    # Méthode pour transformer une ligne de résultats en un objet Abonne
+    def set_all_values(self, rs):
+        from entites.personne import Abonne
+        try:
+            abonne = Abonne(
+                rs["carteAbo"], 
+                rs["email"], 
+                rs["mdp"], 
+                rs["nom"], 
+                rs["prenom"],
+                rs["num_tel"], 
+                rs["num_rue"], 
+                rs["nom_rue"], 
+                rs["num_cb"]
+                )
+            return abonne
+        except KeyError as e:
+            print(f"Erreur lors de la récupération des données : {e}")
+            return None

@@ -6,6 +6,7 @@ from interfaces.accueil_frame import AccueilFrame
 from interfaces.trajet_frame import TrajetFrame
 from interfaces.stations_frame import StationsFrame
 from interfaces.velos_frame import VelosFrame
+from interfaces.abonnements_frame import AbonnementsFrame
 from DAO.DAOAbonne import DAOAbonne
 from DAO.DAOAdministrateur import DAOAdministrateur
 
@@ -42,43 +43,34 @@ class AppController:
         
         return abonnés + administrateurs
 
-    # Changer de frame
+    # Méthodes générales
     def changer_frame(self, nouvelle_frame):
         if self.frame_courant:
             self.frame_courant.destroy()
         self.frame_courant = nouvelle_frame
         self.frame_courant.pack(fill="both", expand=True)
 
-    # Afficher l'écran de connexion
     def afficher_connexion(self):
         self.changer_frame(ConnexionFrame(self.container, self, self.utilisateurs))
 
-    # Afficher l'écran d'inscription
     def afficher_inscription(self):
         self.changer_frame(InscriptionFrame(self.container, self, self.utilisateurs))
 
-    # Afficher l'écran d'accueil
     def afficher_accueil(self, utilisateur):
         self.changer_frame(AccueilFrame(self.container, self, utilisateur)) 
 
-    # Afficher l'écran des trajets
     def afficher_trajets(self, utilisateur):
         self.changer_frame(TrajetFrame(self.container, self, utilisateur))
 
-    # Afficher les stations
     def afficher_stations(self, utilisateur):
         self.changer_frame(StationsFrame(self.container, self, utilisateur))
 
-    # Afficher les vélos
     def afficher_velos(self, utilisateur, id_station):
         self.changer_frame(VelosFrame(self.container, self, utilisateur, id_station))
 
     # Méthodes d'administration (uniquement pour les administrateurs)
-    def gestion_abonnements(self):
-        self.changer_frame()
+    def gestion_abonnements(self, utilisateur):
+        self.changer_frame(AbonnementsFrame(self.container, self, utilisateur))
 
     def gestion_reseau(self):
-        self.changer_frame()
-
-    def gestion_station(self):
         self.changer_frame()

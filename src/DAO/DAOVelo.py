@@ -13,12 +13,13 @@ class DAOVelo:
 
     # Insertion d'un vélo dans la BDD
     def insert_velo(self, un_velo):
-        sql = "INSERT INTO velo (refVelo, electrique, batterie, statut, km_total, date_circu, numStation) VALUES (%s, %s, %s, %s, %s, %s)"
-        valeurs = (un_velo.get_refVelo(), un_velo.get_electrique(), un_velo.get_batterie(), un_velo.get_statut().value, un_velo.get_km_total(), un_velo.get_date_circu(), un_velo.get_numStation().get_numStation())
+        sql = "INSERT INTO velo (refVelo, electrique, batterie, statut, km_total, date_circu, numStation) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        valeurs = (un_velo.get_refVelo(), un_velo.get_electrique(), un_velo.get_batterie(), un_velo.get_statut().value, un_velo.get_km_total(), un_velo.get_date_circu(), un_velo.get_numStation())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
             cursor.execute(sql, valeurs)
+            connection.commit()
             cle = cursor.lastrowid
             return cle
         except Error as e:
@@ -68,14 +69,12 @@ class DAOVelo:
             else:
                 return None
         except Error as e:
-            print("\n<--------------------------------------->")
             print(f"Erreur lors de la recherche du vélo : {e}")
-            print(sql)
-            print(valeurs)
             return None
         finally:
             if cursor:
                 cursor.close()
+
     
     def find_velos_by_station(self, numStation):
         from DAO.DAOStation import DAOStation 
@@ -94,7 +93,7 @@ class DAOVelo:
                 statut=StatutVelo(row['statut']),
                 km_total=row['km_total'],
                 date_circu=row['date_circu'],
-                numStation=station  
+                station=station  
             )
             velos.append(velo)
 
@@ -105,11 +104,12 @@ class DAOVelo:
     # Mise à jour d'un vélo dans la BDD
     def update_velo(self, un_velo):
         sql = "UPDATE velo SET electrique = %s, batterie = %s, statut = %s, km_total = %s, date_circu = %s, numStation = %s WHERE refVelo = %s"
-        valeurs = (un_velo.get_electrique(), un_velo.get_batterie(), un_velo.get_statut().value, un_velo.get_km_total(), un_velo.get_date_circu(), un_velo.get_numStation().get_numStation(), un_velo.get_refVelo())
+        valeurs = (un_velo.get_electrique(), un_velo.get_batterie(), un_velo.get_statut().value, un_velo.get_km_total(), un_velo.get_date_circu(), un_velo.get_numStation(), un_velo.get_refVelo())
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
             cursor.execute(sql, valeurs)
+            connection.commit()
             return True
         except Error as e:
             print("\n<--------------------------------------->")
@@ -128,7 +128,7 @@ class DAOVelo:
         les_velos = []
         sql = "SELECT * FROM velo WHERE "
         critere_refVelo = un_velo.get_refVelo()
-        critere_batterie = un_velo.get_batterie(),
+        critere_batterie = un_velo.get_batterie()
         critere_statut = un_velo.get_statut()
         critere_electrique = un_velo.get_electrique()
         critere_date_circu = un_velo.get_date_circu()
@@ -188,7 +188,7 @@ class DAOVelo:
             statut=StatutVelo(rs["statut"]),
             date_circu=rs["date_circu"],
             km_total=rs["km_total"],
-            numStation=station
+            station=station
         )
 
         return un_velo
@@ -202,7 +202,7 @@ class DAOVelo:
             cursor.execute(sql, valeurs)
             rs = cursor.fetchone()
             if rs:
-                return rs["statut"] == "disponible"
+                return rs["statut"].lower() == "disponible"
             return False
         except Error as e:
             print(f"Erreur lors de la vérification de la disponibilité du vélo : {e}")

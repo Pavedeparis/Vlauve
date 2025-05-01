@@ -1,18 +1,19 @@
 from entites import station as s
 from entites import velo as v
+from entites.personne import Abonne as a
 import csv
 
 
 class Trajet:
-    def __init__(self, refTrajet, station_depart: s, station_arrivee: s, nbr_km, dateheure_debut, dateheure_fin, carteAbo, refVelo: v):
+    def __init__(self, refTrajet, station_depart: s, station_arrivee: s, nbr_km, dateheure_debut, dateheure_fin, abonne:a, velo: v):
         self.refTrajet = refTrajet
         self.station_depart = station_depart
         self.station_arrivee = station_arrivee
         self.nbr_km = nbr_km
         self.dateheure_debut = dateheure_debut
         self.dateheure_fin = dateheure_fin
-        self.carteAbo = carteAbo
-        self.refVelo = refVelo
+        self.abonne = abonne
+        self.velo = velo
         
     # Getters
     def get_refTrajet(self): return self.refTrajet
@@ -21,8 +22,10 @@ class Trajet:
     def get_nbr_km(self): return self.nbr_km
     def get_dateheure_debut(self): return self.dateheure_debut
     def get_dateheure_fin(self): return self.dateheure_fin
-    def get_carteAbo(self): return self.carteAbo
-    def get_refVelo(self): return self.refVelo
+    def get_abonne(self): return self.abonne
+    def get_carteAbo(self): return self.abonne.get_carteAbo()
+    def get_velo(self): return self.velo
+    def get_refVelo(self): return self.velo.get_refVelo()
 
     # Setters
     def set_station_depart(self, val): self.station_depart = val
@@ -30,12 +33,12 @@ class Trajet:
     def set_nbr_km(self, val): self.nbr_km = val
     def set_dateheure_debut(self, val): self.dateheure_debut = val
     def set_dateheure_fin(self, val): self.dateheure_fin = val
-    def set_carteAbo(self, val): self.carteAbo = val
+    def set_abonne(self, val): self.abonne = val
     def set_refVelo(self, val): self.refVelo = val
 
     # Méthodes 
-    def tempsDeTrajet(self): # Pierre
-        return self.dateheure_debut - self.dateheure_fin
+    def tempsDeTrajet(self):
+        return self.dateheure_fin - self.dateheure_debut
     
     # Méthode pour exporter les trajets
     @staticmethod

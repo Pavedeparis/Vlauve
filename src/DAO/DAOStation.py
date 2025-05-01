@@ -14,10 +14,7 @@ class DAOStation:
 
     # Insertion d'une station dans la base de données
     def insert_station(self, une_station):
-        sql = """
-        INSERT INTO station (nom, gps, nom_rue, num_rue, place_elec, place_non_elec, numRes) 
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """
+        sql = "INSERT INTO station (nom, gps, nom_rue, num_rue, place_elec, place_non_elec, numRes) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         valeurs = (
             une_station.get_nom(), une_station.get_gps(), une_station.get_nom_rue(),
             une_station.get_num_rue(), une_station.get_place_elec(), une_station.get_place_non_elec(),
@@ -28,7 +25,7 @@ class DAOStation:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
             cursor.execute(sql, valeurs)
-            connection.commit()  # indispensable
+            connection.commit()  
             return cursor.lastrowid
         except Error as e:
             print("\n<--------------------------------------->")

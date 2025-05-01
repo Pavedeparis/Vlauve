@@ -18,6 +18,7 @@ class DAOVille:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
             cursor.execute(sql, valeurs)
+            connection.commit()
             cle = cursor.lastrowid
             return cle
         except Error as e:

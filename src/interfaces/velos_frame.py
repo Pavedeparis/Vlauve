@@ -35,11 +35,16 @@ class VelosFrame(ttk.Frame):
 
             ttk.Button(self, text="Mettre à jour le vélo", command=self.maj_velo).pack(pady=10)
         else: 
-            # ABO : louer un vélo
+            # Choix du vélo à louer ou retourner
             ttk.Label(self, text="ID du vélo :").pack(pady=5)
             self.idVelo_entry = ttk.Entry(self)
             self.idVelo_entry.pack(pady=5)
+            # ABO : louer un vélo
             ttk.Button(self, text="Louer le vélo", command=self.louer_velo).pack(pady=10)
+            # Abo: Retourner un vélo
+            ttk.Button(self, text="Retourner le vélo", command=self.retourner_velo).pack(pady=10)
+
+
 
         ttk.Button(self, text="Retour", command=self.retour).pack(pady=10)
         
@@ -89,7 +94,7 @@ class VelosFrame(ttk.Frame):
     def louer_velo(self):
         ref_velo = self.idVelo_entry.get()
         if not ref_velo:
-            messagebox("Veuillez entrer un ID de vélo valide")
+            messagebox.showwarning("Attention", "Veuillez entrer un ID de vélo valide")
             return
 
         daoVelo = DAOVelo.get_instance()
@@ -99,7 +104,7 @@ class VelosFrame(ttk.Frame):
             messagebox.showerror("Erreur", f"Vélo avec l'ID {ref_velo} non trouvé.")
             return
 
-        if velo.get_statut().name != StatutVelo.DISPONIBLE:
+        if velo.get_statut() != StatutVelo.DISPONIBLE:
             messagebox.showwarning("Alerte", f"Vélo {ref_velo} déjà loué ou indisponible.")
             return
 
@@ -110,6 +115,34 @@ class VelosFrame(ttk.Frame):
             messagebox.showinfo("Succès", f"Vélo {ref_velo} loué avec succès !")
         except Exception as e:
             messagebox.showerror("Erreur", f"Erreur: {e}")
+    
+    # ABO : Méthode pour retourner un vélo
+    def retourner_velo(self):
+        ref_velo = self.idVelo_entry.get()
+        if not ref_velo:
+            messagebox.showwarning("Erreur", "Veuillez entrer un ID de vélo valide")
+            return
+
+        daoVelo = DAOVelo.get_instance()
+        velo = daoVelo.find_velo(ref_velo)
+        print(f"Type de l'objet récupéré pour le vélo : {type(velo)}")
+
+        if velo is None:
+            messagebox.showerror("Erreur", f"Vélo avec l'ID {ref_velo} non trouvé.")
+            return
+
+        if velo.get_statut() != StatutVelo.EN_CIRCULATION:
+            messagebox.showwarning("Erreur", f"Le vélo {ref_velo} n'est pas en circulation.")
+            return
+
+        try:
+            velo.set_statut(StatutVelo.DISPONIBLE)
+            velo.set_numStation(self.id_station) 
+            daoVelo.update_velo(velo)
+            self.charger_velos()
+            messagebox.showinfo("Succès", f"Vélo {ref_velo} retourné avec succès !")
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Erreur lors du retour : {e}")
 
     # ADMIN : Méthode pour mettre à jour l'état d'un vélo 
     def maj_velo(self):

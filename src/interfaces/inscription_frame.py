@@ -4,7 +4,6 @@ from tkinter import ttk
 from tkinter import messagebox
 from entites.personne import Abonne
 from DAO.DAOAbonne import DAOAbonne
-from entites.abonnement import Abonnement
 from entites.contrat import Contrat
 from DAO.DAOContrat import DAOContrat
 from DAO.DAOAbonnement import DAOAbonnement
@@ -19,7 +18,7 @@ class InscriptionFrame(ttk.Frame):
         ttk.Label(self, text="Créer un compte", font=("Helvetica", 18)).grid(row=0, column=0, columnspan=2, pady=20, sticky="n")
         self.columnconfigure(0, weight=1)
 
-        # Frame princarte_identitepale pour regrouper les 3 blocs côte à côte
+        # Frame principale pour regrouper les 3 blocs côte à côte
         blocs_frame = ttk.Frame(self)
         blocs_frame.grid(row=1, column=0, pady=10, padx=10)
 
@@ -132,12 +131,12 @@ class InscriptionFrame(ttk.Frame):
             row=10, column=0, columnspan=3, sticky="w", padx=5, pady=10
         )
 
-
         # Boutons
         ttk.Button(blocs_frame, text="Retour", command=self.controller.afficher_connexion).grid(row=5, column=0, pady=10, padx=10)
         ttk.Button(blocs_frame, text="Créer", command=self.create_account).grid(row=5, column=1, pady=10, padx=10)
 
     def create_account(self):
+        import re
         # 1. Créer l'abonné et l'enregistrer
         # Récupérer les infos utilisateur depuis les champs
         email = self.mail_entry.get()
@@ -148,20 +147,41 @@ class InscriptionFrame(ttk.Frame):
         num_cb = self.numcb_entry.get()
         num_rue = self.numrue_entry.get()
         nom_rue = self.nomrue_entry.get()
+        code_postal = self.code_postal_entry.get()
 
-        abonne = Abonne(None, email, mdp, nom, prenom, num_tel, num_rue, nom_rue, num_cb)
+        # Validation des champs
+        if not all([email, mdp, nom, prenom, num_tel, num_cb, num_rue, nom_rue, code_postal]):
+            messagebox.showerror("Erreur", "Tous les champs doivent être remplis.")
+            return
+
+        # Vérif de la validité de l'email
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            messagebox.showerror("Erreur", "Veuillez entrer un email valide.")
+            return
+
+        # Vérif numtel = 10 chiffres
+        if not num_tel.isdigit() or len(num_tel) != 10:
+            messagebox.showerror("Erreur", "Le numéro de téléphone doit comporter 10 chiffres.")
+            return
+
+        # Vérif code postal = 5 chiffres
+        if not code_postal.isdigit() or len(code_postal) != 5:
+            messagebox.showerror("Erreur", "Le code postal doit comporter 5 chiffres.")
+            return
+
+        # Vérif num rue = digit
+        if not code_postal.isdigit():
+            messagebox.showerror("Erreur", "Le numéro de la rue doit être des chiffres/nombres.")
+            return
+
         dao_abonne = DAOAbonne.get_instance()
+        abonne = Abonne(None, email, mdp, nom, prenom, num_tel, num_rue, nom_rue, num_cb)
         carteAbo = dao_abonne.insert_abonne(abonne)
-        
-        # Vérifier l'abonné
+
         if carteAbo == -1:
             messagebox.showerror("Erreur", "Échec de création de l'abonné.")
             return
-
-        # Vérifier si tous les champs sont remplis
-        if not all([email, mdp, nom, prenom, num_tel, num_cb, num_rue, nom_rue]):
-            messagebox.showerror("Erreur", "Tous les champs doivent être remplis.")
-            return
+        
 
         # 2. Trouver l'ID de l'abonnement sélectionné
         type_abo = self.type_abo_var.get()
@@ -232,3 +252,4 @@ class InscriptionFrame(ttk.Frame):
             messagebox.showerror("Erreur", "Échec de création du contrat.")
         else:
             messagebox.showinfo("Succès", "Compte et contrat créés avec succès !")
+            self.controller.afficher_accueil(abonne)

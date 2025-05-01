@@ -2,13 +2,15 @@ class Abonnement:
     def __init__(self, idAbo, type_abo, sous_type):
         self.idAbo = idAbo
         
-        type_abo = ["Annuel", "Occasionnel"]
-        if type not in type_abo:
+        # validation du type
+        types_valides = ["Annuel", "Occasionnel"]
+        if type_abo not in types_valides:
             print("Mauvais type d'abonnement")
         self.type_abo = type_abo
 
-        sous_type = ["1 jour", "2 jours", "3 jours", "4 jours", "5 jours", "6 jours", "7 jours", "Réduit", "Classique"]
-        if type not in sous_type:
+        # Validation du sous-type
+        sous_types_valides = ["1 jour", "2 jours", "3 jours", "4 jours", "5 jours", "6 jours", "7 jours", "Réduit", "Classique"]
+        if sous_type not in sous_types_valides:
             print("Mauvais sous type d'abonnement")
         self.sous_type = sous_type
 

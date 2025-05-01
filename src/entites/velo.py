@@ -10,14 +10,14 @@ class StatutVelo(Enum):
     NON_DISPONIBLE = "Non disponible"
 
 class Velo:
-    def __init__(self, refVelo, electrique, batterie, statut: StatutVelo, date_circu, km_total, numStation: s):
+    def __init__(self, refVelo, electrique, batterie, statut: StatutVelo, date_circu, km_total, station: s):
         self.refVelo = refVelo
         self.electrique = electrique
         self.batterie = batterie if electrique else None
         self.statut = statut
         self.km_total = km_total
         self.date_circu = date_circu
-        self.numStation = numStation
+        self.station = station
 
     # Getter pour refVelo
     def get_refVelo(self): return self.refVelo
@@ -26,7 +26,8 @@ class Velo:
     def get_statut(self): return self.statut
     def get_date_circu(self): return self.date_circu
     def get_km_total(self): return self.km_total
-    def get_numStation(self): return self.numStation
+    def get_station(self): return self.station
+    def get_numStation(self): return self.station.get_numStation()
 
     # Setters
     def set_refVelo(self, refVelo): self.refVelo = refVelo
@@ -35,7 +36,8 @@ class Velo:
     def set_statut(self, statut): self.statut = statut
     def set_date_circu(self, date_circu): self.date_circu = date_circu
     def set_km_total(self, km_total): self.km_total = km_total
-    def set_numStation(self, numStation): self.numStation = numStation
+    def set_station(self, station): self.station = station
+    def set_numStation(self, numStation): self.station.set_numStation(numStation) 
 
     # Méthodes
     """
@@ -77,13 +79,13 @@ class Velo:
     """
 
     def louer(self):
-        if self.statut == "disponible" and (not self.electrique or self.pourcentage >= 50):
+        if self.statut == StatutVelo.DISPONIBLE and (not self.electrique or self.pourcentage >= 50):
             self.statut = "en circulation"
         else:
             raise Exception("Vélo déjà loué ou indisponible.")
 
     def retourner(self):
-        if self.statut == "en circulation":
+        if self.statut == StatutVelo.EN_CIRCULATION:
             self.statut = "disponible"
         else:
             raise Exception("Vélo non loué ou déjà retourné.")

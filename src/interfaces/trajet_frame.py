@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from datetime import datetime
 from entites.trajet import Trajet
 from DAO.DAOTrajet import DAOTrajet
@@ -15,43 +15,50 @@ class TrajetFrame(ttk.Frame):
         ttk.Label(self, text="Vos trajets", font=("Helvetica", 16)).pack(pady=30)
 
         # Variables pour les filtres
-        self.filtre_date = tk.StringVar(value="tous")  # "ancien", "recent", "tous"
-        self.filtre_distance = tk.StringVar(value="tous")  # "grande", "petite", "tous"
+        self.filtre_date = tk.StringVar(value="rien")  # valeur par défaut
+        self.filtre_distance = tk.StringVar(value="rien") # valeur par défaut
 
-        # Tableau des trajets
-        self.tree = ttk.Treeview(self, columns=("ID", "Départ", "Arrivée", "KM", "Vélo"), show="headings")
-        self.tree.heading("ID", text="ID Trajet")
-        self.tree.heading("Départ", text="Station Départ")
-        self.tree.heading("Arrivée", text="Station Arrivée")
-        self.tree.heading("KM", text="Km parcourus")
-        self.tree.heading("Vélo", text="Vélo")
-        self.tree.pack(expand=True, fill="both", padx=20, pady=10)
+        # Frame horizontal combiné (filtres + boutons)
+        top_controls = ttk.Frame(self)
+        top_controls.pack(padx=10, pady=10, fill="x")
 
-        # Frame pour les boutons 
-        bouton_frame = ttk.Frame(self)
-        bouton_frame.pack(pady=10)
+        # Sous-frame pour le filtre date
+        fdate_frame = ttk.LabelFrame(top_controls, text="Filtrer par date")
+        fdate_frame.grid(row=0, column=1, padx=5)
+
+        ttk.Radiobutton(fdate_frame, text="Sans filtre", value="rien", variable=self.filtre_date, command=self.charger_trajets).grid(row=0, column=0, padx=2)
+        ttk.Radiobutton(fdate_frame, text="Plus ancien", value="ancien", variable=self.filtre_date, command=self.charger_trajets).grid(row=0, column=1, padx=2)
+        ttk.Radiobutton(fdate_frame, text="Plus récent", value="recent", variable=self.filtre_date, command=self.charger_trajets).grid(row=0, column=2, padx=2)
+
+        # Sous-frame pour le filtre distance
+        fdistance_frame = ttk.LabelFrame(top_controls, text="Filtrer par distance")
+        fdistance_frame.grid(row=0, column=2, padx=5)
+
+        ttk.Radiobutton(fdistance_frame, text="Sans filtre", value="rien", variable=self.filtre_distance, command=self.charger_trajets).grid(row=0, column=0, padx=2)
+        ttk.Radiobutton(fdistance_frame, text="Plus grande distance", value="grande", variable=self.filtre_distance, command=self.charger_trajets).grid(row=0, column=1, padx=2)
+        ttk.Radiobutton(fdistance_frame, text="Plus petite distance", value="petite", variable=self.filtre_distance, command=self.charger_trajets).grid(row=0, column=2, padx=2)
+
+        # Sous-frame pour les boutons
+        bouton_frame = ttk.Frame(top_controls)
+        bouton_frame.grid(row=0, column=0, padx=5)
 
         ttk.Button(bouton_frame, text="Enregistrer un Trajet", command=self.ajouter_trajet).grid(row=0, column=0, padx=5)
         ttk.Button(bouton_frame, text="Exporter Historique", command=self.exporter_trajets).grid(row=0, column=1, padx=5)
         ttk.Button(bouton_frame, text="Retour", command=self.retour).grid(row=0, column=2, padx=5)
 
-        # Frame : filtrer par date
-        filtre_frame = ttk.LabelFrame(self, text="Filtrer par date")
-        filtre_frame.pack(pady=10)
 
-        ttk.Radiobutton(filtre_frame, text="Tous", value="tous", variable=self.filtre_date, command=self.charger_trajets).grid(row=0, column=0, padx=5)
-        ttk.Radiobutton(filtre_frame, text="Plus ancien", value="ancien", variable=self.filtre_date, command=self.charger_trajets).grid(row=0, column=1, padx=5)
-        ttk.Radiobutton(filtre_frame, text="Plus récent", value="recent", variable=self.filtre_date, command=self.charger_trajets).grid(row=0, column=2, padx=5)
+        # Tableau des trajets
+        self.tree = ttk.Treeview(self, columns=("ID", "Départ", "Arrivée", "Début", "Fin", "KM", "Vélo"), show="headings")
+        self.tree.heading("ID", text="ID Trajet")
+        self.tree.heading("Départ", text="Station départ")
+        self.tree.heading("Arrivée", text="Station arrivée")
+        self.tree.heading("Début", text="Début trajet")
+        self.tree.heading("Fin", text="Fin trajet")
+        self.tree.heading("KM", text="Km parcourus")
+        self.tree.heading("Vélo", text="Vélo utilisé")
+        self.tree.pack(expand=True, fill="both", padx=20, pady=10)
 
-        # Frame : filtrer par distance
-        filtre_distance_frame = ttk.LabelFrame(self, text="Filtrer par distance")
-        filtre_distance_frame.pack(pady=10)
-
-        ttk.Radiobutton(filtre_distance_frame, text="Tous", value="tous", variable=self.filtre_distance, command=self.charger_trajets).grid(row=0, column=0, padx=5)
-        ttk.Radiobutton(filtre_distance_frame, text="Plus grande distance", value="grande", variable=self.filtre_distance, command=self.charger_trajets).grid(row=0, column=1, padx=5)
-        ttk.Radiobutton(filtre_distance_frame, text="Plus petite distance", value="petite", variable=self.filtre_distance, command=self.charger_trajets).grid(row=0, column=2, padx=5)
-
-        # Charger trajets
+    # Charger trajets
         self.charger_trajets()
     
     def retour(self):
@@ -63,27 +70,30 @@ class TrajetFrame(ttk.Frame):
 
         # Filtrer par date
         if self.filtre_date.get() == "ancien":
-            trajets.sort(key=lambda t: t.get_dateheure_depart())  
+            trajets = sorted(trajets, key=lambda t: t.get_dateheure_debut())
         elif self.filtre_date.get() == "recent":
-            trajets.sort(key=lambda t: t.get_dateheure_depart(), reverse=True)
+            trajets = sorted(trajets, key=lambda t: t.get_dateheure_debut(), reverse=True)
 
-        # Filtrer par distance
-        if self.filtre_distance.get() == "petite":
-            trajets.sort(key=lambda t: t.get_nbr_km())  
-        elif self.filtre_distance.get() == "grande":
-            trajets.sort(key=lambda t: t.get_nbr_km(), reverse=True)  
+        # Filter par distance
+        if self.filtre_distance.get() == "grande":
+            trajets = sorted(trajets, key=lambda t: t.get_nbr_km(), reverse=True)
+        elif self.filtre_distance.get() == "petite":
+            trajets = sorted(trajets, key=lambda t: t.get_nbr_km())
+
 
         # Vider le tableau pour le réinitialiser
         for row in self.tree.get_children():
             self.tree.delete(row)
 
-        # Remplir tableau avec les données voulues
+        # Remplir tableau avec les données filtrées
         for trajet in trajets:
-            velo = DAOVelo.get_instance().find_velo(trajet.get_refVelo())
+            velo = DAOVelo.get_instance().find_velo(trajet.get_velo().get_refVelo())
             self.tree.insert('', 'end', values=(
                 trajet.get_refTrajet(),
                 trajet.get_station_depart().get_nom(),
                 trajet.get_station_arrivee().get_nom(),
+                trajet.get_dateheure_debut().strftime("%Y-%m-%d %H:%M"),
+                trajet.get_dateheure_fin().strftime("%Y-%m-%d %H:%M"),
                 trajet.get_nbr_km(),
                 velo.get_refVelo() 
             ))
@@ -110,12 +120,23 @@ class TrajetFrame(ttk.Frame):
         entry_velo = ttk.Entry(form)
         entry_velo.grid(row=3, column=1, padx=5, pady=5)
 
-        ttk.Button(form, text="Valider", command=lambda: self.enregistrer_trajet(
-            entry_depart.get(), entry_arrivee.get(), entry_km.get(), entry_velo.get(), form
-        )).grid(row=4, column=0, columnspan=2, pady=10)
+        ttk.Label(form, text="Date-Heure Début (YYYY-MM-DD HH:MM)").grid(row=4, column=0, padx=5, pady=5)
+        entry_heure_debut = ttk.Entry(form)
+        entry_heure_debut.grid(row=4, column=1, padx=5, pady=5)
+
+        ttk.Label(form, text="Date-Heure Fin (YYYY-MM-DD HH:MM)").grid(row=5, column=0, padx=5, pady=5)
+        entry_heure_fin = ttk.Entry(form)
+        entry_heure_fin.grid(row=5, column=1, padx=5, pady=5)
+
+        ttk.Button(form, text="Valider", command=lambda: self.enregistrer_trajet( entry_depart.get(), entry_arrivee.get(), entry_km.get(), entry_velo.get(), entry_heure_debut.get(), entry_heure_fin.get(), form)).grid(row=6, column=0, columnspan=2, pady=10)
+
     
     # Méthode pour enregistrer le trajet avec les informations données
-    def enregistrer_trajet(self, station_depart, station_arrivee, nbr_km, refVelo, form):
+    def enregistrer_trajet(self, station_depart, station_arrivee, nbr_km, refVelo, heure_debut, heure_fin, form):
+        if not station_depart or not station_arrivee or not nbr_km or not refVelo:
+            messagebox.showwarning("Attention", "Veuillez remplir tous les champs.")
+            return
+
         try:
             daoStation = DAOStation.get_instance()
             daoVelo = DAOVelo.get_instance()
@@ -130,22 +151,31 @@ class TrajetFrame(ttk.Frame):
                 print("Erreur : Station ou Vélo introuvable")
                 return
 
-            # Reformuler l'ajout du trajet
+            # Format Date-Heure et gestion d'erreur de saisie au mauvais format
+            try:
+                date_debut = datetime.strptime(heure_debut, "%Y-%m-%d %H:%M")
+                date_fin = datetime.strptime(heure_fin, "%Y-%m-%d %H:%M")
+            except ValueError:
+                messagebox.showerror("Format invalide", "Veuillez entrer la date et l'heure au format : YYYY-MM-DD HH:MM")
+                return
+
+            # Ajout du trajet avec les données
             trajet = Trajet(
                 refTrajet=None,  # Auto-incrémenté
                 station_depart=station_depart,
                 station_arrivee=station_arrivee,
                 nbr_km=float(nbr_km),
-                dateheure_debut=datetime.now(),
-                dateheure_fin=datetime.now(),
-                refVelo=velo.get_refVelo(),
-                carteAbo=self.abonne.get_carteAbo()
+                dateheure_debut=date_debut,
+                dateheure_fin=date_fin,
+                velo=velo,
+                abonne=self.abonne
             )
 
             refTrajet = daoTrajet.insert_trajet(trajet)
 
             if refTrajet != -1:
                 print("Trajet ajouté avec succès ! ID:", refTrajet)
+                messagebox.showinfo("Succès", "Trajet ajouté avec succès !")
                 self.charger_trajets()  
                 form.destroy() 
             else:
@@ -153,6 +183,7 @@ class TrajetFrame(ttk.Frame):
 
         except Exception as e:
             print(f"Erreur : {e}")
+
 
     # Méthode  pour exporter l'historique des trajets
     def exporter_trajets(self):

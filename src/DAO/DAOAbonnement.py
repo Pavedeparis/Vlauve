@@ -13,13 +13,14 @@ class DAOAbonnement:
 
     # Insertion d'un abonnement dans la BDD
     def insert_abonnement(self, un_abonnement):
-        sql = "INSERT INTO abonnement (idAbo, type_abo, sous_type) VALUES (%s, %s, %s)"
-        valeurs = (un_abonnement.get_idAbo(), un_abonnement.get_type_abo(), un_abonnement.get_sous_type())
+        sql = "INSERT INTO abonnement (type_abo, sous_type) VALUES (%s, %s)"
+        valeurs = (un_abonnement.get_type_abo(), un_abonnement.get_sous_type())
 
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
             cursor.execute(sql, valeurs)
+            connection.commit()
             cle = cursor.lastrowid
             return cle
         except Error as e:
@@ -35,13 +36,14 @@ class DAOAbonnement:
                 cursor.close()
 
     # Suppression d'un abonnement dans la BDD
-    def delete_abonnement(self, un_abonnement):
+    def delete_abonnement(self, idAbo):
         sql = "DELETE FROM abonnement WHERE idAbo = %s"
-        valeurs = (un_abonnement.get_idAbo(),)
+        valeurs = (idAbo,)
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
             cursor.execute(sql, valeurs)
+            connection.commit()
             return True
         except Error as e:
             print("\n<--------------------------------------->")
@@ -87,6 +89,7 @@ class DAOAbonnement:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
             cursor.execute(sql, valeurs)
+            connection.commit()
             return True
         except Error as e:
             print("\n<--------------------------------------->")

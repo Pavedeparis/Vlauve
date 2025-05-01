@@ -16,20 +16,35 @@ class DAOTrajet:
 
     # Insertion d'un trajet dans la BDD
     def insert_trajet(self, trajet):
-        sql = "INSERT INTO trajet (station_depart, station_arrivee, nbr_km, dateheure_debut, dateheure_fin, carteAbo, refVelo) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        from datetime import datetime
+        sql = "INSERT INTO trajet (station_depart, station_arrivee, nbr_km, dateheure_debut, dateheure_fin, carteAbo, refVelo) VALUES (%s, %s, %s, %s, %s, %s, %s)"        
+
+        # Vérifie si ce sont des strings, les convertir
+        if isinstance(trajet.get_dateheure_debut(), str):
+            date_debut = datetime.strptime(trajet.get_dateheure_debut(), "%Y-%m-%d %H:%M:%S")
+        else:
+            date_debut = trajet.get_dateheure_debut()
+
+        if isinstance(trajet.get_dateheure_fin(), str):
+            date_fin = datetime.strptime(trajet.get_dateheure_fin(), "%Y-%m-%d %H:%M:%S")
+        else:
+            date_fin = trajet.get_dateheure_fin()
+        
         valeurs = (
-            trajet.get_station_depart().get_numStation(),  # ou get_nom() si tu veux le nom
-            trajet.get_station_arrivee().get_numStation(),  # ou get_nom() si tu veux le nom
+            trajet.get_station_depart().get_numStation(),
+            trajet.get_station_arrivee().get_numStation(),
             trajet.get_nbr_km(),
-            trajet.get_dateheure_debut(),
-            trajet.get_dateheure_fin(),
-            trajet.get_carteAbo(),
+            date_debut,
+            date_fin,
+            trajet.get_abonne().get_carteAbo(),
             trajet.get_refVelo()
         )
+
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor()
             cursor.execute(sql, valeurs)
+            connection.commit()
             return cursor.lastrowid
         except Error as e:
             print("\n<--------------------------------------->")
@@ -71,7 +86,7 @@ class DAOTrajet:
         try:
             connection = DAOSession.get_connexion()
             cursor = connection.cursor(dictionary=True)
-            cursor.execute(sql, (valeurs,))
+            cursor.execute(sql, (valeurs))
             rs = cursor.fetchone()
             if rs:
                 return self.set_all_values(rs)
@@ -96,7 +111,7 @@ class DAOTrajet:
             un_trajet.get_nbr_km(),
             un_trajet.get_dateheure_debut(),
             un_trajet.get_dateheure_fin(),
-            un_trajet.get_carteAbo(),
+            un_trajet.get_abonne().get_carteAbo(),
             un_trajet.get_refVelo(),
             un_trajet.get_refTrajet()
         )
@@ -142,30 +157,32 @@ class DAOTrajet:
 
     def select_trajets_abonne(self, carteAbo):
         connection = DAOSession.get_connexion()
-        cursor = connection.cursor()
+        cursor = connection.cursor(dictionary=True)  # Utilisation du dictionnaire pour une gestion propre des résultats
         sql = "SELECT * FROM trajet WHERE carteAbo = %s"
         cursor.execute(sql, (carteAbo,))
         rows = cursor.fetchall()
 
-        daoStation = DAOStation.get_instance()
         trajets = []
-
         for row in rows:
-            refTrajet = row[0]
-            id_station_depart = row[1]
-            id_station_arrivee = row[2]
-            nbr_km = row[3]
-            date_debut = row[4]
-            date_fin = row[5]
-            carte_abo = row[6]
-            ref_velo = row[7]
+            # Les indices sont maintenant des clés de dictionnaire, donc tu peux les appeler par leur nom
+            station_depart = DAOStation.get_instance().find_station(row["station_depart"])
+            station_arrivee = DAOStation.get_instance().find_station(row["station_arrivee"])
+            velo = DAOVelo.get_instance().find_velo(row["refVelo"])
+            abonne = DAOAbonne.get_instance().find_abonne(row["carteAbo"])
 
-            station_depart = daoStation.find_station(id_station_depart)
-            station_arrivee = daoStation.find_station(id_station_arrivee)
-
-            trajet = Trajet(refTrajet, station_depart, station_arrivee, nbr_km, date_debut, date_fin, carte_abo, ref_velo)
+            trajet = Trajet(
+                row["refTrajet"], 
+                station_depart, 
+                station_arrivee, 
+                row["nbr_km"], 
+                row["dateheure_debut"], 
+                row["dateheure_fin"], 
+                abonne, 
+                velo
+            )
             trajets.append(trajet)
 
+        cursor.close()
         return trajets
 
 

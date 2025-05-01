@@ -30,7 +30,7 @@ class AccueilFrame(ttk.Frame):
 
     def afficher_accueil_admin(self):
         # Menu pour les options possibles
-        ttk.Button(self, text="Gestion des abonnements", command=self.controller.gestion_abonnements).pack()
+        ttk.Button(self, text="Gérer les abonnements", command=lambda: self.controller.gestion_abonnements(self.utilisateur)).pack()
         ttk.Button(self, text="Afficher stations", command=lambda: self.controller.afficher_stations(self.utilisateur)).pack()
         #ttk.Button(self, text="Gestion des vélos", command=self.controller.afficher_).pack()
         #ttk.Button(self, text="Afficher les statistiques", command=self.controller.afficher_).pack()
